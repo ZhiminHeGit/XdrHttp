@@ -15,10 +15,8 @@ public class Main {
     private static HashMap<Long, HashSet<String>> HANDSET_TYPES;
 
     // some constants
-//    private static String rootPath = "point to the root directory of the Xdr Http files";   // needs to be updated by user
-    private static String rootPath = "/Users/jianli/Downloads/cmidata/xdr_http/";   // needs to be updated by user
-    private static String filePath = "/Users/jianli/Downloads/cmidata/xdr_http/files.txt"; // needs to be updated by user
-//    private static String filePath = "create a file that contains all the file names to be processed under the rootPath defined above"; // needs to be updated by user
+    private static String rootPath = "point to the root directory of the Xdr Http files";   // needs to be updated by user
+    private static String filePath = "create a file that contains all the file names to be processed under the rootPath defined above"; // needs to be updated by user
     private static String suffix = ".csv";
     private static String COMMA = ",";
     private static String DOT = "\\.";
@@ -196,23 +194,23 @@ public class Main {
             System.out.println("total time under 4G: " + total_4g + "ms");
         }
 
-//        try{
-//            File file = new File(rootPath + "4g.csv");
-//            if (!file.exists()) {
-//                file.createNewFile();
-//            }
-//            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-//            BufferedWriter bw = new BufferedWriter(fw);
-//            for (Long imei : imeis) {
-//                long time2g = IMEI_23G.containsKey(imei) ? IMEI_23G.get(imei) : 0;
-//                long time4g = IMEI_4G.containsKey(imei) ? IMEI_4G.get(imei) : 0;
-//                long total = time2g + time4g;
-//                bw.write(imei + "," + time2g + "," + time4g + "," + total + "\n");
-//            }
-//            bw.close();
-//        }catch (Exception ex){
-//            ex.printStackTrace();
-//        }
+        try{
+            File file = new File(rootPath + "4g.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (Long imei : imeis) {
+                long time2g = IMEI_23G.containsKey(imei) ? IMEI_23G.get(imei) : 0;
+                long time4g = IMEI_4G.containsKey(imei) ? IMEI_4G.get(imei) : 0;
+                long total = time2g + time4g;
+                bw.write(imei + "," + time2g + "," + time4g + "," + total + "\n");
+            }
+            bw.close();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
 
         if(DEBUG) {
             for (Long imei : IMEI_MSISDN_MAPPINGS.keySet()) {
@@ -239,35 +237,35 @@ public class Main {
         writeToFileInValueOrder("imei-durations.csv", IMEI_DURATIONS);
         writeToFileInValueOrder("imei-mapping.csv", IMEI_MSISDN_MAPPINGS);
 
-//        for(Long imei : FREQUENT_USER_ACTIVITIES.keySet()){
-//            writeToFileInValueOrder(imei + ".csv", FREQUENT_USER_ACTIVITIES.get(imei));
-//        }
+        for(Long imei : FREQUENT_USER_ACTIVITIES.keySet()){
+            writeToFileInValueOrder(imei + ".csv", FREQUENT_USER_ACTIVITIES.get(imei));
+        }
         writeToFileInValueOrder("4g-locations.csv", IMEI_4G_LOCATIONS);
         writeToFileInValueOrder("23g-locations.csv", IMEI_23G_LOCATIONS);
 
-//        try{
-//            File file = new File(rootPath + "handsets.csv");
-//            if (!file.exists()) {
-//                file.createNewFile();
-//            }
-//            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-//            BufferedWriter bw = new BufferedWriter(fw);
-//        for(Long imei : HANDSET_TYPES.keySet()){
-//            StringBuilder sb = new StringBuilder();
-//            sb.append(imei);
-//            sb.append(COMMA);
-//            HashSet<String> types = HANDSET_TYPES.get(imei);
-//            for(String type : types){
-//                sb.append(type);
-//                sb.append(";");
-//            }
-//            sb.append("\n");
-//            bw.write(sb.toString());
-//        }
-//            bw.close();
-//        }catch (Exception ex){
-//            ex.printStackTrace();
-//        }
+        try{
+            File file = new File(rootPath + "handsets.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+        for(Long imei : HANDSET_TYPES.keySet()){
+            StringBuilder sb = new StringBuilder();
+            sb.append(imei);
+            sb.append(COMMA);
+            HashSet<String> types = HANDSET_TYPES.get(imei);
+            for(String type : types){
+                sb.append(type);
+                sb.append(";");
+            }
+            sb.append("\n");
+            bw.write(sb.toString());
+        }
+            bw.close();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
 
     // write the content of HashMap in the order by values to a file specified by filename
