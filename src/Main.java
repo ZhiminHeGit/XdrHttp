@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 public class Main {
     // some static HashMaps to store the data
-    private static HashMap<Long, Long> IMSI_MSISDN_MAPPINGS, IMSI_COUNTS, IMSI_DURATIONS;
+    private static HashMap<Long, Long> IMSI_MSISDN_MAPPINGS, IMSI_IMEI_MAPPINGS, IMSI_COUNTS, IMSI_DURATIONS;
     private static HashMap<String, Long> FQDN_COUNTS, FQDN_TWOTIERS_COUNTS, IMSI_4G_LOCATIONS, IMSI_23G_LOCATIONS;
     private static HashSet<Long> MOST_FREQUENT_USERS;
     private static HashMap<Long, HashMap<Long, String>> FREQUENT_USER_ACTIVITIES;
@@ -16,16 +16,28 @@ public class Main {
     private static HashMap<Long, MobileUser> MOBILE_USERS;
     private static HashSet<Integer> UNIQUE_HOME_MCCS, UNIQUE_SERVING_MCCS;
     private static HashSet<Roaming> ROAMING_MAPS;
+    private static HashMap<String, String> LABELLED_DOMAINS;
+    private static HashSet<String> DOMAIN_LABELS;
+    private static HashMap<String, Integer> DOMAIN_LABEL_COUNTS;
+    private static HashMap<String, HashSet<Long>> LABEL_IMSI_MAPS;
+    private static HashMap<String, String> MCC_MAP_BY_COUNTRY;
+    private static HashMap<Integer, String> MCC_MAP;
 
     // some constants
-    private static String rootPath = "point to the root directory of the Xdr Http files";   // needs to be updated by user
-//    private static String rootPath = "/Users/jianli/Downloads/cmidata/xdr_http/";   // needs to be updated by user
-    private static String filePath = "create a file that contains all the file names to be processed under the rootPath defined above"; // needs to be updated by user
-//    private static String filePath = "/Users/jianli/Downloads/cmidata/xdr_http/files.txt";
+//    private static String rootPath = "point to the root directory of the Xdr Http files";   // needs to be updated by user
+    private static String rootPath = "/Users/jianli/Downloads/cmidata/xdr_http/";   // needs to be updated by user
+//    private static String filePath = "create a file that contains all the file names to be processed under the rootPath defined above"; // needs to be updated by user
+    private static String filePath = "/Users/jianli/Downloads/cmidata/xdr_http/files.txt";
     private static String suffix = ".csv";
     private static String COMMA = ",";
     private static String DOT = "\\.";
     private static final boolean DEBUG = false;
+    private static final int THRESHOLD = 200;
+    private static final String IPHONE = "iphone";
+    private static final String ANDROID = "android";
+    private static final String WINDOWS = "windows";
+    private static final String OTHER = "other";
+    private static final String LINE_BREAK = "\n";
 
     // regular expression to validate IP address
     private static final String IPADDRESS_PATTERN =
@@ -41,6 +53,7 @@ public class Main {
         IMSI_COUNTS = new HashMap<>();
         IMSI_DURATIONS = new HashMap<>();
         IMSI_MSISDN_MAPPINGS = new HashMap<>();
+        IMSI_IMEI_MAPPINGS = new HashMap<>();
         FQDN_TWOTIERS_COUNTS = new HashMap<>();
         IMSI_4G = new HashMap<>();
         IMSI_23G = new HashMap<>();
@@ -54,6 +67,15 @@ public class Main {
         UNIQUE_HOME_MCCS = new HashSet<>();
         UNIQUE_SERVING_MCCS = new HashSet<>();
         ROAMING_MAPS = new HashSet<>();
+        LABELLED_DOMAINS = new HashMap<>();
+        DOMAIN_LABEL_COUNTS = new HashMap<>();
+        DOMAIN_LABELS = new HashSet<>();
+        LABEL_IMSI_MAPS = new HashMap<>();
+        MCC_MAP = new HashMap<>();
+        MCC_MAP_BY_COUNTRY = new HashMap<>();
+
+        populateDomainLabels();
+        readMccList();
 
         // this is kind of additional after the first run to get the most frequent users
         // the IMSIs below represent the ones that consumes the most durations in connection
@@ -91,6 +113,8 @@ public class Main {
                         imsis.add(imsi);
 
                         MobileUser mobileUser = MOBILE_USERS.containsKey(imsi) ? MOBILE_USERS.get(imsi) : new MobileUser();
+                        if(mobileUser.getImsi() == 0L)
+                            mobileUser.setImsi(xdrHttp.getImsi());
                         //TODO: need more granularity for parsing the user agent string
                         if(xdrHttp.getUserAgent() != null){
                             if(HANDSET_TYPES.containsKey(imsi)){
@@ -104,11 +128,29 @@ public class Main {
                             }
 
                             //TODO: handset information to be added to the user record
+                            if(mobileUser.getPhoneType() == null) {
+                                String userAgent = xdrHttp.getUserAgent().toLowerCase();
+                                if(userAgent.contains(IPHONE))
+                                    mobileUser.setPhoneType(IPHONE);
+                                else if (userAgent.contains(ANDROID))
+                                    mobileUser.setPhoneType(ANDROID);
+                                else if(userAgent.contains(WINDOWS))
+                                    mobileUser.setPhoneType(WINDOWS);
+                            }
                         }
 
                         // IMSI to MSISDN mapping
                         if (!IMSI_MSISDN_MAPPINGS.containsKey(imsi))
                             IMSI_MSISDN_MAPPINGS.put(imsi, xdrHttp.getMsisdn());
+
+                        if(mobileUser.getMsisdn() == 0L)
+                            mobileUser.setMsisdn(xdrHttp.getMsisdn());
+
+                        if (!IMSI_IMEI_MAPPINGS.containsKey(imsi))
+                            IMSI_IMEI_MAPPINGS.put(imsi, xdrHttp.getImei());
+
+                        if(mobileUser.getImei() == 0L)
+                            mobileUser.setImei(xdrHttp.getImei());
 
                         // the number of occurrences in the xdr of each IMSI
                         if (!IMSI_COUNTS.containsKey(imsi))
@@ -274,7 +316,7 @@ public class Main {
                 long time2g = IMSI_23G.containsKey(imsi) ? IMSI_23G.get(imsi) : 0;
                 long time4g = IMSI_4G.containsKey(imsi) ? IMSI_4G.get(imsi) : 0;
                 long total = time2g + time4g;
-                bw.write(imsi + "," + time2g + "," + time4g + "," + total + "\n");
+                bw.write(imsi + "," + time2g + "," + time4g + "," + total + LINE_BREAK);
             }
             bw.close();
         }catch (Exception ex){
@@ -289,7 +331,7 @@ public class Main {
             FileWriter fw = new FileWriter(file.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
             for (Integer mcc : UNIQUE_HOME_MCCS) {
-                bw.write(mcc + "\n");
+                bw.write(mcc + LINE_BREAK);
             }
             bw.close();
         }catch (Exception ex){
@@ -304,7 +346,7 @@ public class Main {
             FileWriter fw = new FileWriter(file.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
             for (Integer mcc : UNIQUE_SERVING_MCCS) {
-                bw.write(mcc + "\n");
+                bw.write(mcc + LINE_BREAK);
             }
             bw.close();
         }catch (Exception ex){
@@ -319,7 +361,7 @@ public class Main {
             FileWriter fw = new FileWriter(file.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
             for (Roaming roaming : ROAMING_MAPS) {
-                bw.write(roaming.getHomeMcc() + COMMA + roaming.getServingMcc() + "\n");
+                bw.write(roaming.getHomeMcc() + COMMA + roaming.getServingMcc() + LINE_BREAK);
             }
             bw.close();
         }catch (Exception ex){
@@ -349,7 +391,8 @@ public class Main {
 //        writeToFileInValueOrder("fqdn.csv", FQDN_COUNTS);
         writeToFileInValueOrder("imsi.csv", IMSI_COUNTS);
         writeToFileInValueOrder("imsi-durations.csv", IMSI_DURATIONS);
-        writeToFileInValueOrder("imsi-mapping.csv", IMSI_MSISDN_MAPPINGS);
+        writeToFileInValueOrder("imsi-msisdn-mapping.csv", IMSI_MSISDN_MAPPINGS);
+        writeToFileInValueOrder("imsi-imei-mapping.csv", IMSI_IMEI_MAPPINGS);
 
         for(Long imei : FREQUENT_USER_ACTIVITIES.keySet()){
             writeToFileInValueOrder(imei + ".csv", FREQUENT_USER_ACTIVITIES.get(imei));
@@ -367,30 +410,68 @@ public class Main {
                 FileWriter fw = new FileWriter(file.getAbsoluteFile());
                 BufferedWriter bw = new BufferedWriter(fw);
                 MobileUser mobileUser = entry.getValue();
-                bw.write("home MCC:" + mobileUser.getHomeMcc() + "\n");
-                bw.write("home MNC:" + mobileUser.getHomeMnc() + "\n");
-                bw.write("last trip date:" + mobileUser.getLastTripDate() + "\n");
-                bw.write("last trip serving MCC:" + mobileUser.getLastTripMcc() + "\n");
+                bw.write("IMSI: " + mobileUser.getImsi() + LINE_BREAK);
+                bw.write("MSISDN: " + mobileUser.getMsisdn() + LINE_BREAK);
+                bw.write("IMEI: " + mobileUser.getImei() + LINE_BREAK);
+                bw.write("home country/region:" + MCC_MAP.get(mobileUser.getHomeMcc()) + LINE_BREAK);
+                bw.write("home MCC:" + mobileUser.getHomeMcc() + LINE_BREAK);
+                bw.write("home MNC:" + mobileUser.getHomeMnc() + LINE_BREAK);
+                bw.write("phone Type:" + (mobileUser.getPhoneType() == null ? OTHER : mobileUser.getPhoneType()) + LINE_BREAK);
+                bw.write("last trip date:" + new Date(mobileUser.getLastTripDate()*1000) + LINE_BREAK);
+                bw.write("last trip to country/region:" + MCC_MAP.get(mobileUser.getLastTripMcc()) + LINE_BREAK);
+                bw.write("last trip serving MCC:" + mobileUser.getLastTripMcc() + LINE_BREAK);
                 bw.write("Footprints: \n" );
                 HashMap<FootPrint, Long> footPrintLongHashMap = new HashMap<>();
                 for(Map.Entry<Integer, FootPrint> footPrintEntry : mobileUser.getFootPrintHashMap().entrySet()){
                     footPrintLongHashMap.put(footPrintEntry.getValue(), footPrintEntry.getValue().getEnterDate());
                 }
-                footPrintLongHashMap = sortByValue(footPrintLongHashMap);
+                footPrintLongHashMap = sortByValueReversed(footPrintLongHashMap);
                 for(FootPrint footPrint : footPrintLongHashMap.keySet()){
+                    bw.write("Roaming country/region: " + MCC_MAP.get(footPrint.getServingMcc()) + ",");
                     bw.write("Roaming MCC: " + footPrint.getServingMcc() + ",");
-                    bw.write("Entering: " + new Date(footPrint.getEnterDate()) + ",");
-                    bw.write("Exiting: " + new Date(footPrint.getExitDate()) + "\n");
+                    bw.write("Entering: " + new Date(footPrint.getEnterDate()*1000) + ",");
+                    bw.write("Exiting: " + new Date(footPrint.getExitDate()*1000) + LINE_BREAK);
                 }
                 bw.write("Most visited sites by counts:\n");
-                HashMap<String, Integer> myMap = sortByValue(mobileUser.getVisitedSites());
+                HashMap<String, Integer> myMap = sortByValueReversed(mobileUser.getVisitedSites());
+                HashMap<String, Integer> labelledMap = new HashMap<>();
                 for(Map.Entry<String, Integer> mapEntry : myMap.entrySet()){
-                    bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + "\n");
+                    bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + LINE_BREAK);
+                    if(mapEntry.getValue() > THRESHOLD){
+                        if(LABELLED_DOMAINS.containsKey(mapEntry.getKey())){
+                            String label = LABELLED_DOMAINS.get(mapEntry.getKey());
+                            if(labelledMap.containsKey(label)){
+                                labelledMap.put(label, labelledMap.get(label) + 1);
+                            } else
+                                labelledMap.put(label, 1);
+
+                            if(DOMAIN_LABEL_COUNTS.containsKey(label)){
+                                DOMAIN_LABEL_COUNTS.put(label, DOMAIN_LABEL_COUNTS.get(label) + 1);
+                            } else
+                                DOMAIN_LABEL_COUNTS.put(label, 1);
+                        }
+                    }
                 }
                 bw.write("Most visited sites by browsing durations:\n");
-                myMap = sortByValue(mobileUser.getBrowseDurations());
+                myMap = sortByValueReversed(mobileUser.getBrowseDurations());
                 for(Map.Entry<String, Integer> mapEntry : myMap.entrySet()){
-                    bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + "\n");
+                    bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + LINE_BREAK);
+                }
+                if(labelledMap.size() > 0){
+                    labelledMap = sortByValueReversed(labelledMap);
+                    bw.write("Labels:\n");
+                    for(Map.Entry<String, Integer> entry1 : labelledMap.entrySet()){
+                        bw.write(entry1.getKey() + COMMA + entry1.getValue() + LINE_BREAK);
+                        HashSet<Long> imeiSet;
+                        if(LABEL_IMSI_MAPS.containsKey(entry1.getKey()))
+                        {
+                            imeiSet = LABEL_IMSI_MAPS.get(entry1.getKey());
+                        } else {
+                            imeiSet = new HashSet<>();
+                        }
+                        imeiSet.add(entry.getKey());
+                        LABEL_IMSI_MAPS.put(entry1.getKey(), imeiSet);
+                    }
                 }
                 bw.close();
             }catch (Exception ex){
@@ -398,7 +479,30 @@ public class Main {
             }
         }
 
+        DOMAIN_LABEL_COUNTS = sortByValueReversed(DOMAIN_LABEL_COUNTS);
+        writeToFileInValueOrder("label-imsi-counts.csv", DOMAIN_LABEL_COUNTS);
+
         System.out.println(new Date() + " completed writing mobile user data");
+
+        try {
+            for(Map.Entry<String, HashSet<Long>> entry : LABEL_IMSI_MAPS.entrySet()) {
+                File file = new File(rootPath + entry.getKey() + ".csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                for (Long imsi : entry.getValue()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(imsi);
+                    sb.append(LINE_BREAK);
+                    bw.write(sb.toString());
+                }
+                bw.close();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
 //        try {
 //            File file = new File(rootPath + "handsets.csv");
@@ -416,7 +520,7 @@ public class Main {
 //                    sb.append(type);
 //                    sb.append(";");
 //                }
-//                sb.append("\n");
+//                sb.append(LINE_BREAK);
 //                bw.write(sb.toString());
 //            }
 //            bw.close();
@@ -439,7 +543,7 @@ public class Main {
             FileWriter fw = new FileWriter(file.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
             for(HashMap.Entry<K, V> entry : hashMap.entrySet()){
-                bw.write(entry.getKey() + "," + entry.getValue() + "\n");
+                bw.write(entry.getKey() + "," + entry.getValue() + LINE_BREAK);
             }
             bw.close();
         }catch (Exception ex){
@@ -506,6 +610,41 @@ public class Main {
         return string != null && !string.isEmpty();
     }
 
+    private static void populateDomainLabels(){
+        try {
+            // the below file has all the file names to be processed
+            BufferedReader br = new BufferedReader(new FileReader(rootPath + "labelled-domains.csv"));
+            String line = br.readLine();
+            while (line != null) {
+                String[] parts = line.split(COMMA);
+                LABELLED_DOMAINS.put(parts[0], parts[1]);
+                DOMAIN_LABELS.add(parts[1]);
+
+                line = br.readLine();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void readMccList(){
+        try {
+            // the below file has all the file names to be processed
+            BufferedReader br = new BufferedReader(new FileReader(rootPath + "MCC.csv"));
+            String line = br.readLine();
+            while (line != null) {
+                String[] parts = line.split(COMMA);
+                MCC_MAP_BY_COUNTRY.put(parts[0], parts.length == 3 ? parts[1] + COMMA + parts[2] : parts[1]);
+                for(int i=1; i < parts.length; i++){
+                    MCC_MAP.put(Integer.parseInt(parts[i]), parts[0]);
+                }
+
+                line = br.readLine();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
     // utility to reach to the root level of a FQDN
     private static String consolidateFQDN(String fqdn){
         if(fqdn == null || fqdn.isEmpty())
@@ -537,5 +676,21 @@ public class Main {
                 .forEachOrdered( e -> result.put(e.getKey(), e.getValue()) );
 
         return result;
+    }
+
+    private static <K, V extends Comparable<? super V>> HashMap<K, V>  sortByValueReversed( HashMap<K, V> map )
+    {
+        HashMap<K, V> result = new LinkedHashMap<>();
+        Stream<Map.Entry<K, V>> st = map.entrySet().stream();
+
+        st.sorted( comparingByValueReversed() )
+                .forEachOrdered( e -> result.put(e.getKey(), e.getValue()) );
+
+        return result;
+    }
+
+    private static <K, V extends Comparable<? super V>> Comparator<Map.Entry<K,V>> comparingByValueReversed() {
+        return (Comparator<Map.Entry<K, V>> & Serializable)
+                (c1, c2) -> c2.getValue().compareTo(c1.getValue());
     }
 }

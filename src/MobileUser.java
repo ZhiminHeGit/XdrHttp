@@ -1,14 +1,14 @@
+import java.io.Serializable;
 import java.util.HashMap;
-import java.util.HashSet;
 
-public class MobileUser {
+public class MobileUser implements Serializable{
     long imsi, msisdn, imei;
     int homeMcc, homeMnc, tac;
     String phoneBrand, phoneType;
     long lastTripDate;
     int lastTripMcc;
 
-    HashMap<String, Integer> visitedSites, browseDurations;
+    HashMap<String, Integer> visitedSites, browseDurations, labelMap;
 
     HashMap<Integer, FootPrint> footPrintHashMap;
 
@@ -50,9 +50,18 @@ public class MobileUser {
         footPrintHashMap = new HashMap<>();
         this.visitedSites = new HashMap<>();
         this.browseDurations = new HashMap<>();
+        labelMap = new HashMap<>();
 
         phoneBrand = null;
         phoneType = null;
+    }
+
+    public HashMap<String, Integer> getLabelMap() {
+        return labelMap;
+    }
+
+    public void setLabelMap(HashMap<String, Integer> labelMap) {
+        this.labelMap = labelMap;
     }
 
     public long getImsi() {

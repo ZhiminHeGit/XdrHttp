@@ -1,4 +1,6 @@
-public class FootPrint {
+import java.io.Serializable;
+
+public class FootPrint implements Serializable{
     long imsi, enterDate, exitDate;
     int servingMcc;
 
