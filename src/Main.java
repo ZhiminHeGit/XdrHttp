@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 public class Main {
     // some static HashMaps to store the data
     private static HashMap<Long, Long> IMSI_MSISDN_MAPPINGS, IMSI_IMEI_MAPPINGS, IMSI_COUNTS, IMSI_DURATIONS;
-    private static HashMap<String, Long> FQDN_COUNTS, FQDN_TWOTIERS_COUNTS, IMSI_4G_LOCATIONS, IMSI_23G_LOCATIONS;
+    private static HashMap<String, Long> FQDN_COUNTS, CONSOLIDATED_HOST_COUNT, IMSI_4G_LOCATIONS, IMSI_23G_LOCATIONS, FILTERED_CONSOLIDATED_HOST_COUNT;
     private static HashSet<Long> MOST_FREQUENT_USERS;
     private static HashMap<Long, HashMap<Long, String>> FREQUENT_USER_ACTIVITIES;
 
@@ -15,13 +15,21 @@ public class Main {
     private static HashMap<Long, HashSet<String>> HANDSET_TYPES;
     private static HashMap<Long, MobileUser> MOBILE_USERS;
     private static HashSet<Integer> UNIQUE_HOME_MCCS, UNIQUE_SERVING_MCCS;
-    private static HashSet<Roaming> ROAMING_MAPS;
+    private static HashSet<Roaming> ROAMING_SET;
+    private static HashMap<Integer, Integer> HOME_MCC_COUNT_MAP;
+    private static HashMap<Roaming, HashSet<Long>> ROAMING_USER_MAP;
+    private static HashMap<Roaming, HashMap<String, Long>> HOST_MAP_BY_ROAMING, FQDN_MAP_BY_ROAMING, FILTERED_HOST_MAP_BY_ROAMING;
+    private static HashMap<Integer, HashMap<String, Long>> HOST_MAP_BY_HOME_MCC, FQDN_MAP_BY_HOME_MCC, FILTERED_HOST_MAP_BY_HOME_MCC;
     private static HashMap<String, String> LABELLED_DOMAINS;
     private static HashSet<String> DOMAIN_LABELS;
     private static HashMap<String, Integer> DOMAIN_LABEL_COUNTS;
     private static HashMap<String, HashSet<Long>> LABEL_IMSI_MAPS;
     private static HashMap<String, String> MCC_MAP_BY_COUNTRY;
     private static HashMap<Integer, String> MCC_MAP;
+    private static HashSet<Long> IMSIS;
+    private static HashSet<String> EXCLULDED_DOMAINS;
+    private static HashMap<Roaming, Long> ROAMING_DURATION_MAP, ROAMING_2G_DURATION_MAP, ROAMING_4G_DURATION_MAP;
+    private static HashMap<Roaming, Long> ROAMING_CONTENT_LENGTH_MAP, ROAMING_2G_CONTENT_LENGTH_MAP, ROAMING_4G_CONTENT_LENGTH_MAP;
 
     // some constants
 //    private static String rootPath = "point to the root directory of the Xdr Http files";   // needs to be updated by user
@@ -50,32 +58,12 @@ public class Main {
     public static void main(String[] args) {
 
         // initialization
-        IMSI_COUNTS = new HashMap<>();
-        IMSI_DURATIONS = new HashMap<>();
-        IMSI_MSISDN_MAPPINGS = new HashMap<>();
-        IMSI_IMEI_MAPPINGS = new HashMap<>();
-        FQDN_TWOTIERS_COUNTS = new HashMap<>();
-        IMSI_4G = new HashMap<>();
-        IMSI_23G = new HashMap<>();
-        IMSI_4G_LOCATIONS = new HashMap<>();
-        IMSI_23G_LOCATIONS = new HashMap<>();
-        long total_4g=0L, total_2g=0L;
-        FQDN_COUNTS = new HashMap<>();
-        HashSet<Long> imsis = new HashSet<>();
-        HANDSET_TYPES = new HashMap<>();
-        MOBILE_USERS = new HashMap<>();
-        UNIQUE_HOME_MCCS = new HashSet<>();
-        UNIQUE_SERVING_MCCS = new HashSet<>();
-        ROAMING_MAPS = new HashSet<>();
-        LABELLED_DOMAINS = new HashMap<>();
-        DOMAIN_LABEL_COUNTS = new HashMap<>();
-        DOMAIN_LABELS = new HashSet<>();
-        LABEL_IMSI_MAPS = new HashMap<>();
-        MCC_MAP = new HashMap<>();
-        MCC_MAP_BY_COUNTRY = new HashMap<>();
+        long total_4g=0L, total_2g=0L, total_4g_size=0L, total_2g_size = 0L;
+        initializeStaticParameters();
 
         populateDomainLabels();
         readMccList();
+        populateExcludedDomains();
 
         // this is kind of additional after the first run to get the most frequent users
         // the IMSIs below represent the ones that consumes the most durations in connection
@@ -110,7 +98,7 @@ public class Main {
                         Long imsi = xdrHttp.getImsi();
 
                         // keep a HashSet of IMSIs for quick lookup in 2/3/4G locations
-                        imsis.add(imsi);
+                        IMSIS.add(imsi);
 
                         MobileUser mobileUser = MOBILE_USERS.containsKey(imsi) ? MOBILE_USERS.get(imsi) : new MobileUser();
                         if(mobileUser.getImsi() == 0L)
@@ -168,9 +156,30 @@ public class Main {
                         if(mobileUser.getTac() == 0)
                             mobileUser.setTac(xdrHttp.getTac());
 
+                        // count the user by Home Mcc
+                        if(!MOBILE_USERS.containsKey(imsi)) {
+                            if (HOME_MCC_COUNT_MAP.containsKey(xdrHttp.getHomeMcc()))
+                                HOME_MCC_COUNT_MAP.put(xdrHttp.getHomeMcc(), HOME_MCC_COUNT_MAP.get(xdrHttp.getHomeMcc()) + 1);
+                            else
+                                HOME_MCC_COUNT_MAP.put(xdrHttp.getHomeMcc(), 1);
+                        }
+
                         UNIQUE_SERVING_MCCS.add(xdrHttp.getServingMcc());
                         UNIQUE_HOME_MCCS.add(xdrHttp.getHomeMcc());
-                        ROAMING_MAPS.add(new Roaming(xdrHttp.getHomeMcc(), xdrHttp.getServingMcc()));
+                        Roaming roaming = new Roaming(xdrHttp.getHomeMcc(), xdrHttp.getServingMcc());
+                        ROAMING_SET.add(roaming);
+
+                        // record the IMSIs to the roaming map
+                        if(ROAMING_USER_MAP.containsKey(roaming)){
+                            HashSet<Long> roamingImsis = ROAMING_USER_MAP.get(roaming);
+                            roamingImsis.add(imsi);
+                            ROAMING_USER_MAP.put(roaming, roamingImsis);
+                        } else {
+                            HashSet<Long> roamingImsis = new HashSet<>();
+                            roamingImsis.add(imsi);
+                            ROAMING_USER_MAP.put(roaming, roamingImsis);
+                        }
+
                         // footprint
                         HashMap<Integer, FootPrint> footPrintHashMap = mobileUser.getFootPrintHashMap();
                         if(footPrintHashMap.containsKey(xdrHttp.getServingMcc())){
@@ -207,10 +216,10 @@ public class Main {
                             else
                                 FQDN_COUNTS.put(host, FQDN_COUNTS.get(host) + 1);
 
-                            if (!FQDN_TWOTIERS_COUNTS.containsKey(shortHost))
-                                FQDN_TWOTIERS_COUNTS.put(shortHost, 1L);
+                            if (!CONSOLIDATED_HOST_COUNT.containsKey(shortHost))
+                                CONSOLIDATED_HOST_COUNT.put(shortHost, 1L);
                             else
-                                FQDN_TWOTIERS_COUNTS.put(shortHost, FQDN_TWOTIERS_COUNTS.get(shortHost) + 1);
+                                CONSOLIDATED_HOST_COUNT.put(shortHost, CONSOLIDATED_HOST_COUNT.get(shortHost) + 1);
                             if (MOST_FREQUENT_USERS.contains(imsi)) {
                                 if (xdrHttp.getDate() != 0L && xdrHttp.getHost() != null) {
                                     if (FREQUENT_USER_ACTIVITIES.containsKey(imsi)) {
@@ -223,6 +232,88 @@ public class Main {
                                         FREQUENT_USER_ACTIVITIES.put(imsi, contents);
                                     }
                                 }
+                            }
+
+                            HashMap<String, Long> hostMap;
+                            // do the count by roaming and by home MCC
+                            if(HOST_MAP_BY_HOME_MCC.containsKey(xdrHttp.getHomeMcc())){
+                                hostMap = HOST_MAP_BY_HOME_MCC.get(xdrHttp.getHomeMcc());
+                            } else {
+                                hostMap = new HashMap<>();
+                            }
+                            if(hostMap.containsKey(shortHost)){
+                                hostMap.put(shortHost, hostMap.get(shortHost) + 1);
+                            } else {
+                                hostMap.put(shortHost, 1L);
+                            }
+                            HOST_MAP_BY_HOME_MCC.put(xdrHttp.getHomeMcc(), hostMap);
+
+                            if(FQDN_MAP_BY_HOME_MCC.containsKey(xdrHttp.getHomeMcc())){
+                                hostMap = FQDN_MAP_BY_HOME_MCC.get(xdrHttp.getHomeMcc());
+                            } else {
+                                hostMap = new HashMap<>();
+                            }
+                            if(hostMap.containsKey(host)){
+                                hostMap.put(host, hostMap.get(host) + 1);
+                            } else {
+                                hostMap.put(host, 1L);
+                            }
+                            FQDN_MAP_BY_HOME_MCC.put(xdrHttp.getHomeMcc(), hostMap);
+
+                            if(HOST_MAP_BY_ROAMING.containsKey(roaming)){
+                                hostMap = HOST_MAP_BY_ROAMING.get(roaming);
+                            } else {
+                                hostMap = new HashMap<>();
+                            }
+                            if(hostMap.containsKey(shortHost)){
+                                hostMap.put(shortHost, hostMap.get(shortHost) + 1);
+                            } else {
+                                hostMap.put(shortHost, 1L);
+                            }
+                            HOST_MAP_BY_ROAMING.put(roaming, hostMap);
+
+                            if(FQDN_MAP_BY_ROAMING.containsKey(roaming)){
+                                hostMap = FQDN_MAP_BY_ROAMING.get(roaming);
+                            } else {
+                                hostMap = new HashMap<>();
+                            }
+                            if(hostMap.containsKey(host)){
+                                hostMap.put(host, hostMap.get(host) + 1);
+                            } else {
+                                hostMap.put(host, 1L);
+                            }
+                            FQDN_MAP_BY_ROAMING.put(roaming, hostMap);
+
+                            // filter certain domains
+                            if(!EXCLULDED_DOMAINS.contains(shortHost)){
+                                if(FILTERED_HOST_MAP_BY_HOME_MCC.containsKey(xdrHttp.getHomeMcc())){
+                                    hostMap = FILTERED_HOST_MAP_BY_HOME_MCC.get(xdrHttp.getHomeMcc());
+                                } else {
+                                    hostMap = new HashMap<>();
+                                }
+                                if(hostMap.containsKey(shortHost)){
+                                    hostMap.put(shortHost, hostMap.get(shortHost) + 1);
+                                } else {
+                                    hostMap.put(shortHost, 1L);
+                                }
+                                FILTERED_HOST_MAP_BY_HOME_MCC.put(xdrHttp.getHomeMcc(), hostMap);
+
+                                if(FILTERED_HOST_MAP_BY_ROAMING.containsKey(roaming)){
+                                    hostMap = FILTERED_HOST_MAP_BY_ROAMING.get(roaming);
+                                } else {
+                                    hostMap = new HashMap<>();
+                                }
+                                if(hostMap.containsKey(shortHost)){
+                                    hostMap.put(shortHost, hostMap.get(shortHost) + 1);
+                                } else {
+                                    hostMap.put(shortHost, 1L);
+                                }
+                                FILTERED_HOST_MAP_BY_ROAMING.put(roaming, hostMap);
+
+                                if (!FILTERED_CONSOLIDATED_HOST_COUNT.containsKey(shortHost))
+                                    FILTERED_CONSOLIDATED_HOST_COUNT.put(shortHost, 1L);
+                                else
+                                    FILTERED_CONSOLIDATED_HOST_COUNT.put(shortHost, FILTERED_CONSOLIDATED_HOST_COUNT.get(shortHost) + 1);
                             }
 
                             HashMap<String, Integer> visitedSites = mobileUser.getVisitedSites();
@@ -260,6 +351,13 @@ public class Main {
                                 } else {
                                     IMSI_4G_LOCATIONS.put(location4g, ((long)xdrHttp.getDuration()));
                                 }
+                                total_4g_size += (long)xdrHttp.getContentLength();
+
+                                if(ROAMING_4G_DURATION_MAP.containsKey(roaming)){
+                                    ROAMING_4G_DURATION_MAP.put(roaming, ROAMING_4G_DURATION_MAP.get(roaming) + xdrHttp.getDuration());
+                                } else {
+                                    ROAMING_4G_DURATION_MAP.put(roaming, (long)xdrHttp.getDuration());
+                                }
                             }
                             if(xdrHttp.getCellCI()!= 0 && xdrHttp.getCellLAC() != 0){
                                 if (IMSI_23G.containsKey(imsi)){
@@ -275,6 +373,13 @@ public class Main {
                                 } else {
                                     IMSI_23G_LOCATIONS.put(location23g, ((long)xdrHttp.getDuration()));
                                 }
+                                total_2g_size += (long) xdrHttp.getContentLength();
+
+                                if(ROAMING_2G_DURATION_MAP.containsKey(roaming)){
+                                    ROAMING_2G_DURATION_MAP.put(roaming, ROAMING_2G_DURATION_MAP.get(roaming) + xdrHttp.getDuration());
+                                } else {
+                                    ROAMING_2G_DURATION_MAP.put(roaming, (long)xdrHttp.getDuration());
+                                }
                             }
 
                             // the durations in the xdr of each IMSI
@@ -282,6 +387,34 @@ public class Main {
                                 IMSI_DURATIONS.put(imsi, (long)xdrHttp.getDuration());
                             else
                                 IMSI_DURATIONS.put(imsi, IMSI_DURATIONS.get(imsi) + xdrHttp.getDuration());
+
+                            if (!ROAMING_DURATION_MAP.containsKey(roaming))
+                                ROAMING_DURATION_MAP.put(roaming, (long)xdrHttp.getDuration());
+                            else
+                                ROAMING_DURATION_MAP.put(roaming, ROAMING_DURATION_MAP.get(roaming) + xdrHttp.getDuration());
+                        }
+
+                        if(xdrHttp.getContentLength() != 0) {
+                            if (!ROAMING_CONTENT_LENGTH_MAP.containsKey(roaming))
+                                ROAMING_CONTENT_LENGTH_MAP.put(roaming, (long) xdrHttp.getContentLength());
+                            else
+                                ROAMING_CONTENT_LENGTH_MAP.put(roaming, ROAMING_CONTENT_LENGTH_MAP.get(roaming) + xdrHttp.getContentLength());
+
+                            if(xdrHttp.getCellCI()!= 0 && xdrHttp.getCellLAC() != 0){
+                                if(ROAMING_2G_CONTENT_LENGTH_MAP.containsKey(roaming)){
+                                    ROAMING_2G_CONTENT_LENGTH_MAP.put(roaming, ROAMING_2G_CONTENT_LENGTH_MAP.get(roaming) + xdrHttp.getContentLength());
+                                } else {
+                                    ROAMING_2G_CONTENT_LENGTH_MAP.put(roaming, (long)xdrHttp.getContentLength());
+                                }
+                            }
+
+                            if (xdrHttp.getTai() != 0 && xdrHttp.getEcgi() != 0) {
+                                if(ROAMING_4G_CONTENT_LENGTH_MAP.containsKey(roaming)){
+                                    ROAMING_4G_CONTENT_LENGTH_MAP.put(roaming, ROAMING_4G_CONTENT_LENGTH_MAP.get(roaming) + xdrHttp.getContentLength());
+                                } else {
+                                    ROAMING_4G_CONTENT_LENGTH_MAP.put(roaming, (long)xdrHttp.getContentLength());
+                                }
+                            }
                         }
 
                         mobileUser.setLastTripDate(xdrHttp.getDate());
@@ -300,73 +433,26 @@ public class Main {
 
         System.out.println(new Date() + " completed processing");
 
-        if(DEBUG) {
-            System.out.println("total time under 2/3G: " + total_2g + "ms");
-            System.out.println("total time under 4G: " + total_4g + "ms");
-        }
+        System.out.println("total time under 2/3G: " + total_2g + "ms");
+        System.out.println("total retrieved content length under 2/3G: " + total_2g_size + "bytes");
+        System.out.println("total time under 4G: " + total_4g + "ms");
+        System.out.println("total retrieved content length under 4G: " + total_4g_size + "bytes");
 
-        try{
-            File file = new File(rootPath + "imsi-4g.csv");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
-            for (Long imsi : imsis) {
-                long time2g = IMSI_23G.containsKey(imsi) ? IMSI_23G.get(imsi) : 0;
-                long time4g = IMSI_4G.containsKey(imsi) ? IMSI_4G.get(imsi) : 0;
-                long total = time2g + time4g;
-                bw.write(imsi + "," + time2g + "," + time4g + "," + total + LINE_BREAK);
-            }
-            bw.close();
-        }catch (Exception ex){
-            ex.printStackTrace();
-        }
+//        outputIMSI4G();
+//        outputHomeMCCs();
+//        outputServingMCCs();
+//        outputRoamingMap();
+//
+//        outputHostMapByHomeMcc();
+//        outputFQDNMapByHomeMcc();
+//
+//        outputHostMapByRoaming();
+//        outputFQDNMapByRoaming();
+//
+//        outputUsersByRoaming();
 
-        try{
-            File file = new File(rootPath + "homeMccs.csv");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
-            for (Integer mcc : UNIQUE_HOME_MCCS) {
-                bw.write(mcc + LINE_BREAK);
-            }
-            bw.close();
-        }catch (Exception ex){
-            ex.printStackTrace();
-        }
-
-        try{
-            File file = new File(rootPath + "servingMccs.csv");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
-            for (Integer mcc : UNIQUE_SERVING_MCCS) {
-                bw.write(mcc + LINE_BREAK);
-            }
-            bw.close();
-        }catch (Exception ex){
-            ex.printStackTrace();
-        }
-
-        try{
-            File file = new File(rootPath + "RoamingMaps.csv");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
-            for (Roaming roaming : ROAMING_MAPS) {
-                bw.write(roaming.getHomeMcc() + COMMA + roaming.getServingMcc() + LINE_BREAK);
-            }
-            bw.close();
-        }catch (Exception ex){
-            ex.printStackTrace();
-        }
+//        outputFilteredHostMapByHomeMcc();
+//        outputFilteredHostMapByRoaming();
 
         if(DEBUG) {
             for (Long imei : IMSI_MSISDN_MAPPINGS.keySet()) {
@@ -381,26 +467,162 @@ public class Main {
                 System.out.println("host: " + host + " appears: " + FQDN_COUNTS.get(host) + " times");
             }
 
-            for (String host : FQDN_TWOTIERS_COUNTS.keySet()) {
-                System.out.println("host: " + host + " appears: " + FQDN_TWOTIERS_COUNTS.get(host) + " times");
+            for (String host : CONSOLIDATED_HOST_COUNT.keySet()) {
+                System.out.println("host: " + host + " appears: " + CONSOLIDATED_HOST_COUNT.get(host) + " times");
             }
         }
 
         // write the various results to files
-//        writeToFileInValueOrder("consolidate.csv", FQDN_TWOTIERS_COUNTS);
-//        writeToFileInValueOrder("fqdn.csv", FQDN_COUNTS);
-        writeToFileInValueOrder("imsi.csv", IMSI_COUNTS);
-        writeToFileInValueOrder("imsi-durations.csv", IMSI_DURATIONS);
-        writeToFileInValueOrder("imsi-msisdn-mapping.csv", IMSI_MSISDN_MAPPINGS);
-        writeToFileInValueOrder("imsi-imei-mapping.csv", IMSI_IMEI_MAPPINGS);
+//        writeToFileInValueOrder("consolidate.csv", CONSOLIDATED_HOST_COUNT, true);
+//        writeToFileInValueOrder("filtered-consolidated-hosts.csv", FILTERED_CONSOLIDATED_HOST_COUNT, true);
+//        writeToFileInValueOrder("fqdn.csv", FQDN_COUNTS, true);
+//        writeToFileInValueOrder("imsi.csv", IMSI_COUNTS, true);
+//        writeToFileInValueOrder("imsi-durations.csv", IMSI_DURATIONS, true);
+//        writeToFileInValueOrder("imsi-msisdn-mapping.csv", IMSI_MSISDN_MAPPINGS, true);
+//        writeToFileInValueOrder("imsi-imei-mapping.csv", IMSI_IMEI_MAPPINGS, true);
+//        writeToFileInValueOrder("users-by-home-mcc.csv", HOME_MCC_COUNT_MAP, true);
+//        writeToFileInValueOrder("roaming-duration.csv", ROAMING_DURATION_MAP, true);
+//        writeToFileInValueOrder("roaming-content-length.csv", ROAMING_CONTENT_LENGTH_MAP, true);
+        writeToFileInValueOrder("roaming-2g-duration.csv", ROAMING_2G_DURATION_MAP, true);
+        writeToFileInValueOrder("roaming-2g-content-length.csv", ROAMING_2G_CONTENT_LENGTH_MAP, true);
+        writeToFileInValueOrder("roaming-4g-duration.csv", ROAMING_4G_DURATION_MAP, true);
+        writeToFileInValueOrder("roaming-4g-content-length.csv", ROAMING_4G_CONTENT_LENGTH_MAP, true);
+        outputRoamingDetails();
 
         for(Long imei : FREQUENT_USER_ACTIVITIES.keySet()){
-            writeToFileInValueOrder(imei + ".csv", FREQUENT_USER_ACTIVITIES.get(imei));
+            writeToFileInValueOrder(imei + ".csv", FREQUENT_USER_ACTIVITIES.get(imei), true);
         }
-        writeToFileInValueOrder("imsi-4g-locations.csv", IMSI_4G_LOCATIONS);
-        writeToFileInValueOrder("imsi-23g-locations.csv", IMSI_23G_LOCATIONS);
+//        writeToFileInValueOrder("imsi-4g-locations.csv", IMSI_4G_LOCATIONS, true);
+//        writeToFileInValueOrder("imsi-23g-locations.csv", IMSI_23G_LOCATIONS, true);
 
         System.out.println(new Date() + " starting write results for each mobile user");
+
+//        outputMobileUsers();
+//        writeToFileInValueOrder("label-imsi-counts.csv", DOMAIN_LABEL_COUNTS, true);
+
+        System.out.println(new Date() + " completed writing mobile user data");
+
+//        outputLabelledIMSIMap();
+//        outputHandsets();
+    }
+
+    private static void outputIMSI4G() {
+        try {
+            File file = new File(rootPath + "imsi-4g.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (Long imsi : IMSIS) {
+                long time2g = IMSI_23G.containsKey(imsi) ? IMSI_23G.get(imsi) : 0;
+                long time4g = IMSI_4G.containsKey(imsi) ? IMSI_4G.get(imsi) : 0;
+                long total = time2g + time4g;
+                bw.write(imsi + "," + time2g + "," + time4g + "," + total + LINE_BREAK);
+            }
+            bw.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputHomeMCCs() {
+        try {
+            File file = new File(rootPath + "homeMccs.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (Integer mcc : UNIQUE_HOME_MCCS) {
+                bw.write(mcc + COMMA + MCC_MAP.get(mcc) + LINE_BREAK);
+            }
+            bw.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputServingMCCs() {
+        try{
+            File file = new File(rootPath + "servingMccs.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (Integer mcc : UNIQUE_SERVING_MCCS) {
+                bw.write(mcc + COMMA + MCC_MAP.get(mcc) + LINE_BREAK);
+            }
+            bw.close();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputRoamingMap(){
+        try{
+            File file = new File(rootPath + "RoamingMaps.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (Roaming roaming : ROAMING_SET) {
+                bw.write(roaming.getHomeMcc() + COMMA + MCC_MAP.get(roaming.getHomeMcc()) + COMMA+ roaming.getServingMcc() + COMMA + MCC_MAP.get(roaming.getServingMcc()) + LINE_BREAK);
+            }
+            bw.close();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputRoamingDetails(){
+        try{
+            File file = new File(rootPath + "RoamingDetails.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write("HomeMCC,Home Country/Region,Roaming MCC,Roaming Country/Region,User Count,Hosts Visited,Browse Duration (ms),");
+            bw.write("Content Length (byte),Average Data Consumption (byte),Duration under 2/3G (ms),Content Length under 2/3G (byte),Duration under 4G (ms),Content Length under 4G (byte)" + LINE_BREAK);
+            for (Roaming roaming : ROAMING_SET) {
+                bw.write(roaming.getHomeMcc() + COMMA + MCC_MAP.get(roaming.getHomeMcc()) + COMMA+ roaming.getServingMcc() + COMMA + MCC_MAP.get(roaming.getServingMcc()) + COMMA);
+                int userCount = ROAMING_USER_MAP.get(roaming).size();
+                long contentLength = ROAMING_CONTENT_LENGTH_MAP.get(roaming);
+                long average = contentLength/userCount;
+                bw.write(userCount + COMMA + FQDN_MAP_BY_ROAMING.get(roaming).size() + COMMA + ROAMING_DURATION_MAP.get(roaming) + COMMA + contentLength + COMMA + average + COMMA);
+                bw.write(ROAMING_2G_DURATION_MAP.get(roaming) + COMMA + ROAMING_2G_CONTENT_LENGTH_MAP.get(roaming) + COMMA + ROAMING_4G_DURATION_MAP.get(roaming) + COMMA + ROAMING_4G_CONTENT_LENGTH_MAP.get(roaming) + LINE_BREAK);
+            }
+            bw.close();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputUsersByRoaming(){
+        try{
+            for(Map.Entry<Roaming, HashSet<Long>> entry : ROAMING_USER_MAP.entrySet()) {
+                String roamingDirection = entry.getKey().getHomeMcc() + MCC_MAP.get(entry.getKey().getHomeMcc()) + "-To-" + entry.getKey().getServingMcc() + MCC_MAP.get(entry.getKey().getServingMcc());
+                File file = new File(rootPath+ roamingDirection + "-users.csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                for (Long valueEntry : entry.getValue()) {
+                    bw.write(valueEntry + LINE_BREAK);
+                }
+                System.out.println(roamingDirection + ":" + entry.getValue().size() + " users");
+                bw.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputMobileUsers(){
         for(Map.Entry<Long, MobileUser> entry : MOBILE_USERS.entrySet()){
             try{
                 File file = new File(rootPath + "imsis/" + entry.getKey() + ".csv");
@@ -417,7 +639,7 @@ public class Main {
                 bw.write("home MCC:" + mobileUser.getHomeMcc() + LINE_BREAK);
                 bw.write("home MNC:" + mobileUser.getHomeMnc() + LINE_BREAK);
                 bw.write("phone Type:" + (mobileUser.getPhoneType() == null ? OTHER : mobileUser.getPhoneType()) + LINE_BREAK);
-                bw.write("last trip date:" + new Date(mobileUser.getLastTripDate()*1000) + LINE_BREAK);
+                bw.write("last trip date:" + new Date(mobileUser.getLastTripDate()) + LINE_BREAK);
                 bw.write("last trip to country/region:" + MCC_MAP.get(mobileUser.getLastTripMcc()) + LINE_BREAK);
                 bw.write("last trip serving MCC:" + mobileUser.getLastTripMcc() + LINE_BREAK);
                 bw.write("Footprints: \n" );
@@ -429,12 +651,17 @@ public class Main {
                 for(FootPrint footPrint : footPrintLongHashMap.keySet()){
                     bw.write("Roaming country/region: " + MCC_MAP.get(footPrint.getServingMcc()) + ",");
                     bw.write("Roaming MCC: " + footPrint.getServingMcc() + ",");
-                    bw.write("Entering: " + new Date(footPrint.getEnterDate()*1000) + ",");
-                    bw.write("Exiting: " + new Date(footPrint.getExitDate()*1000) + LINE_BREAK);
+                    bw.write("Entering: " + new Date(footPrint.getEnterDate()) + ",");
+                    bw.write("Exiting: " + new Date(footPrint.getExitDate()) + LINE_BREAK);
                 }
-                bw.write("Most visited sites by counts:\n");
+                bw.write("Most visited sites (filtered) by counts:\n");
                 HashMap<String, Integer> myMap = sortByValueReversed(mobileUser.getVisitedSites());
                 HashMap<String, Integer> labelledMap = new HashMap<>();
+                for(Map.Entry<String, Integer> mapEntry : myMap.entrySet()){
+                    if(!EXCLULDED_DOMAINS.contains(mapEntry.getKey()))
+                        bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + LINE_BREAK);
+                }
+                bw.write("Most visited sites by counts:\n");
                 for(Map.Entry<String, Integer> mapEntry : myMap.entrySet()){
                     bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + LINE_BREAK);
                     if(mapEntry.getValue() > THRESHOLD){
@@ -452,8 +679,13 @@ public class Main {
                         }
                     }
                 }
-                bw.write("Most visited sites by browsing durations:\n");
+                bw.write("Most visited sites (filtered) by browsing durations:\n");
                 myMap = sortByValueReversed(mobileUser.getBrowseDurations());
+                for(Map.Entry<String, Integer> mapEntry : myMap.entrySet()){
+                    if(!EXCLULDED_DOMAINS.contains(mapEntry.getKey()))
+                        bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + LINE_BREAK);
+                }
+                bw.write("Most visited sites by browsing durations:\n");
                 for(Map.Entry<String, Integer> mapEntry : myMap.entrySet()){
                     bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + LINE_BREAK);
                 }
@@ -478,12 +710,8 @@ public class Main {
                 ex.printStackTrace();
             }
         }
-
-        DOMAIN_LABEL_COUNTS = sortByValueReversed(DOMAIN_LABEL_COUNTS);
-        writeToFileInValueOrder("label-imsi-counts.csv", DOMAIN_LABEL_COUNTS);
-
-        System.out.println(new Date() + " completed writing mobile user data");
-
+    }
+    private static void outputLabelledIMSIMap(){
         try {
             for(Map.Entry<String, HashSet<Long>> entry : LABEL_IMSI_MAPS.entrySet()) {
                 File file = new File(rootPath + entry.getKey() + ".csv");
@@ -503,35 +731,158 @@ public class Main {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
-//        try {
-//            File file = new File(rootPath + "handsets.csv");
-//            if (!file.exists()) {
-//                file.createNewFile();
-//            }
-//            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-//            BufferedWriter bw = new BufferedWriter(fw);
-//            for (Long imei : HANDSET_TYPES.keySet()) {
-//                StringBuilder sb = new StringBuilder();
-//                sb.append(imei);
-//                sb.append(COMMA);
-//                HashSet<String> types = HANDSET_TYPES.get(imei);
-//                for (String type : types) {
-//                    sb.append(type);
-//                    sb.append(";");
-//                }
-//                sb.append(LINE_BREAK);
-//                bw.write(sb.toString());
-//            }
-//            bw.close();
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//        }
+    }
+    private static void outputHandsets(){
+        try {
+            File file = new File(rootPath + "handsets.csv");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (Long imei : HANDSET_TYPES.keySet()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(imei);
+                sb.append(COMMA);
+                HashSet<String> types = HANDSET_TYPES.get(imei);
+                for (String type : types) {
+                    sb.append(type);
+                    sb.append(";");
+                }
+                sb.append(LINE_BREAK);
+                bw.write(sb.toString());
+            }
+            bw.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
+    private static void outputHostMapByHomeMcc(){
+        try{
+            for(Map.Entry<Integer, HashMap<String, Long>> entry : HOST_MAP_BY_HOME_MCC.entrySet()) {
+                File file = new File(rootPath + entry.getKey() + MCC_MAP.get(entry.getKey()) + "-hosts.csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                HashMap<String, Long> valueMap = sortByValueReversed(entry.getValue());
+                for (Map.Entry<String, Long> valueEntry : valueMap.entrySet()) {
+                    bw.write(valueEntry.getKey() + COMMA + valueEntry.getValue() + LINE_BREAK);
+                }
+                bw.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputFilteredHostMapByHomeMcc(){
+        try{
+            for(Map.Entry<Integer, HashMap<String, Long>> entry : FILTERED_HOST_MAP_BY_HOME_MCC.entrySet()) {
+                File file = new File(rootPath + entry.getKey() + MCC_MAP.get(entry.getKey()) + "-filteredhosts.csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                HashMap<String, Long> valueMap = sortByValueReversed(entry.getValue());
+                for (Map.Entry<String, Long> valueEntry : valueMap.entrySet()) {
+                    bw.write(valueEntry.getKey() + COMMA + valueEntry.getValue() + LINE_BREAK);
+                }
+                bw.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputFQDNMapByHomeMcc(){
+        try{
+            for(Map.Entry<Integer, HashMap<String, Long>> entry : FQDN_MAP_BY_HOME_MCC.entrySet()) {
+                File file = new File(rootPath + entry.getKey() + MCC_MAP.get(entry.getKey()) + "-FQDNs.csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                HashMap<String, Long> valueMap = sortByValueReversed(entry.getValue());
+                for (Map.Entry<String, Long> valueEntry : valueMap.entrySet()) {
+                    bw.write(valueEntry.getKey() + COMMA + valueEntry.getValue() + LINE_BREAK);
+                }
+                bw.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputHostMapByRoaming(){
+        try{
+            for(Map.Entry<Roaming, HashMap<String, Long>> entry : HOST_MAP_BY_ROAMING.entrySet()) {
+                File file = new File(rootPath + entry.getKey().getHomeMcc() + MCC_MAP.get(entry.getKey().getHomeMcc()) + "-To-" + entry.getKey().getServingMcc() + MCC_MAP.get(entry.getKey().getServingMcc()) +"-hosts.csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                HashMap<String, Long> valueMap = sortByValueReversed(entry.getValue());
+                for (Map.Entry<String, Long> valueEntry : valueMap.entrySet()) {
+                    bw.write(valueEntry.getKey() + COMMA + valueEntry.getValue() + LINE_BREAK);
+                }
+                bw.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputFilteredHostMapByRoaming(){
+        try{
+            for(Map.Entry<Roaming, HashMap<String, Long>> entry : FILTERED_HOST_MAP_BY_ROAMING.entrySet()) {
+                File file = new File(rootPath + entry.getKey().getHomeMcc() + MCC_MAP.get(entry.getKey().getHomeMcc()) + "-To-" + entry.getKey().getServingMcc() + MCC_MAP.get(entry.getKey().getServingMcc()) +"-filteredhosts.csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                HashMap<String, Long> valueMap = sortByValueReversed(entry.getValue());
+                for (Map.Entry<String, Long> valueEntry : valueMap.entrySet()) {
+                    bw.write(valueEntry.getKey() + COMMA + valueEntry.getValue() + LINE_BREAK);
+                }
+                bw.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void outputFQDNMapByRoaming(){
+        try{
+            for(Map.Entry<Roaming, HashMap<String, Long>> entry : FQDN_MAP_BY_ROAMING.entrySet()) {
+                File file = new File(rootPath + entry.getKey().getHomeMcc() + MCC_MAP.get(entry.getKey().getHomeMcc()) + "-To-" + entry.getKey().getServingMcc() + MCC_MAP.get(entry.getKey().getServingMcc()) +"-FQDNs.csv");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile());
+                BufferedWriter bw = new BufferedWriter(fw);
+                HashMap<String, Long> valueMap = sortByValueReversed(entry.getValue());
+                for (Map.Entry<String, Long> valueEntry : valueMap.entrySet()) {
+                    bw.write(valueEntry.getKey() + COMMA + valueEntry.getValue() + LINE_BREAK);
+                }
+                bw.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
     // write the content of HashMap in the order by values to a file specified by filename
-    private static <K, V extends Comparable<? super V>> void writeToFileInValueOrder(String filename, HashMap<K, V> hashMap){
-        hashMap = sortByValue(hashMap);
+    private static <K, V extends Comparable<? super V>> void writeToFileInValueOrder(String filename, HashMap<K, V> hashMap, boolean isReverseOrder){
+        if(!isReverseOrder)
+            hashMap = sortByValue(hashMap);
+        else
+            hashMap = sortByValueReversed(hashMap);
         try {
             File file = new File(rootPath + filename);
 
@@ -560,8 +911,8 @@ public class Main {
         String[] parts = line.split(COMMA);
         XdrHttp xdrHttp = new XdrHttp();
         if(notEmpty(parts[1])){
-            String[] parts2 = parts[1].split(DOT);
-            xdrHttp.setDate(Long.parseLong(parts2[0]));
+            // the date format is "start time in UTC with msec, such as 1456088339.964
+            xdrHttp.setDate((long)(Float.parseFloat(parts[1])*1000));
         }
         if(notEmpty(parts[2])){
             xdrHttp.setDuration(Integer.parseInt(parts[2]));
@@ -601,6 +952,9 @@ public class Main {
         if(notEmpty(parts[23]))
             xdrHttp.setHost(parts[23].toLowerCase());
 
+        if(notEmpty(parts[26]))
+            xdrHttp.setContentLength(Long.parseLong(parts[26]));
+
         if(notEmpty(parts[27]))
             xdrHttp.setUserAgent(parts[27].toLowerCase());
         return xdrHttp;
@@ -610,6 +964,47 @@ public class Main {
         return string != null && !string.isEmpty();
     }
 
+    private static void initializeStaticParameters(){
+        IMSI_COUNTS = new HashMap<>();
+        IMSI_DURATIONS = new HashMap<>();
+        IMSI_MSISDN_MAPPINGS = new HashMap<>();
+        IMSI_IMEI_MAPPINGS = new HashMap<>();
+        CONSOLIDATED_HOST_COUNT = new HashMap<>();
+        IMSI_4G = new HashMap<>();
+        IMSI_23G = new HashMap<>();
+        IMSI_4G_LOCATIONS = new HashMap<>();
+        IMSI_23G_LOCATIONS = new HashMap<>();
+
+        FQDN_COUNTS = new HashMap<>();
+        IMSIS = new HashSet<>();
+        HANDSET_TYPES = new HashMap<>();
+        MOBILE_USERS = new HashMap<>();
+        UNIQUE_HOME_MCCS = new HashSet<>();
+        UNIQUE_SERVING_MCCS = new HashSet<>();
+        ROAMING_SET = new HashSet<>();
+        LABELLED_DOMAINS = new HashMap<>();
+        DOMAIN_LABEL_COUNTS = new HashMap<>();
+        DOMAIN_LABELS = new HashSet<>();
+        LABEL_IMSI_MAPS = new HashMap<>();
+        MCC_MAP = new HashMap<>();
+        MCC_MAP_BY_COUNTRY = new HashMap<>();
+        HOME_MCC_COUNT_MAP = new HashMap<>();
+        ROAMING_USER_MAP = new HashMap<>();
+        HOST_MAP_BY_HOME_MCC = new HashMap<>();
+        HOST_MAP_BY_ROAMING = new HashMap<>();
+        FQDN_MAP_BY_HOME_MCC = new HashMap<>();
+        FQDN_MAP_BY_ROAMING = new HashMap<>();
+        EXCLULDED_DOMAINS = new HashSet<>();
+        FILTERED_HOST_MAP_BY_HOME_MCC = new HashMap<>();
+        FILTERED_HOST_MAP_BY_ROAMING = new HashMap<>();
+        FILTERED_CONSOLIDATED_HOST_COUNT = new HashMap<>();
+        ROAMING_CONTENT_LENGTH_MAP = new HashMap<>();
+        ROAMING_DURATION_MAP = new HashMap<>();
+        ROAMING_2G_CONTENT_LENGTH_MAP = new HashMap<>();
+        ROAMING_2G_DURATION_MAP = new HashMap<>();
+        ROAMING_4G_CONTENT_LENGTH_MAP = new HashMap<>();
+        ROAMING_4G_DURATION_MAP = new HashMap<>();
+    }
     private static void populateDomainLabels(){
         try {
             // the below file has all the file names to be processed
@@ -619,6 +1014,21 @@ public class Main {
                 String[] parts = line.split(COMMA);
                 LABELLED_DOMAINS.put(parts[0], parts[1]);
                 DOMAIN_LABELS.add(parts[1]);
+
+                line = br.readLine();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private static void populateExcludedDomains(){
+        try {
+            // the below file has all the file names to be processed
+            BufferedReader br = new BufferedReader(new FileReader(rootPath + "excludeHosts.txt"));
+            String line = br.readLine();
+            while (line != null) {
+                EXCLULDED_DOMAINS.add(line);
 
                 line = br.readLine();
             }
@@ -656,7 +1066,7 @@ public class Main {
         String[] parts = fqdn.split(DOT);
         if (parts.length <= 2)
             return fqdn;
-        else if(parts[parts.length-2].equals("com") || parts[parts.length-2].equals("net") || parts[parts.length-2].equals("org") || parts[parts.length-2].equals("gov"))
+        else if(parts[parts.length-2].equals("co") || parts[parts.length-2].equals("com") || parts[parts.length-2].equals("net") || parts[parts.length-2].equals("org") || parts[parts.length-2].equals("gov"))
             return parts[parts.length-3] + "." + parts[parts.length-2] + "." + parts[parts.length-1];
         else
             return parts[parts.length-2] + "." + parts[parts.length-1];

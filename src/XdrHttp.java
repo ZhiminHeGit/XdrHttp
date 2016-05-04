@@ -13,7 +13,7 @@ public class XdrHttp {
     private int responoseCode;
     private String host;
     private String uriData, contentType;
-    private int contentLength;
+    private long contentLength;
     private String userAgent;
     private String sgsnIP, sgwIP;
 
@@ -24,6 +24,7 @@ public class XdrHttp {
         this.msisdn = 0L;
         this.duration = 0;
         this.tai = this.ecgi = this.cellCI = this.cellLAC = 0;
+        this.contentLength = 0L;
         this.userAgent = null;
     }
 
@@ -235,11 +236,11 @@ public class XdrHttp {
         this.contentType = contentType;
     }
 
-    public int getContentLength() {
+    public long getContentLength() {
         return contentLength;
     }
 
-    public void setContentLength(int contentLength) {
+    public void setContentLength(long contentLength) {
         this.contentLength = contentLength;
     }
 
