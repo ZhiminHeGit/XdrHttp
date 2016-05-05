@@ -30,12 +30,14 @@ public class Main {
     private static HashSet<String> EXCLULDED_DOMAINS;
     private static HashMap<Roaming, Long> ROAMING_DURATION_MAP, ROAMING_2G_DURATION_MAP, ROAMING_4G_DURATION_MAP;
     private static HashMap<Roaming, Long> ROAMING_CONTENT_LENGTH_MAP, ROAMING_2G_CONTENT_LENGTH_MAP, ROAMING_4G_CONTENT_LENGTH_MAP;
+    private static HashMap<Roaming, HashMap<Long, Long>> ROAMING_VIP_USER_MAP, ROAMING_UNDERUSED_USER_MAP;
+    private static HashMap<Roaming, HashMap<String, Long>> ROAMING_HOST_CONTENT_LENGTH_MAP;
 
     // some constants
-//    private static String rootPath = "point to the root directory of the Xdr Http files";   // needs to be updated by user
-    private static String rootPath = "/Users/jianli/Downloads/cmidata/xdr_http/";   // needs to be updated by user
-//    private static String filePath = "create a file that contains all the file names to be processed under the rootPath defined above"; // needs to be updated by user
-    private static String filePath = "/Users/jianli/Downloads/cmidata/xdr_http/files.txt";
+    private static String rootPath = "point to the root directory of the Xdr Http files";   // needs to be updated by user
+//    private static String rootPath = "/Users/jianli/Downloads/cmidata/xdr_http/";   // needs to be updated by user
+    private static String filePath = "create a file that contains all the file names to be processed under the rootPath defined above"; // needs to be updated by user
+//    private static String filePath = "/Users/jianli/Downloads/cmidata/xdr_http/files.txt";
     private static String suffix = ".csv";
     private static String COMMA = ",";
     private static String DOT = "\\.";
@@ -46,6 +48,8 @@ public class Main {
     private static final String WINDOWS = "windows";
     private static final String OTHER = "other";
     private static final String LINE_BREAK = "\n";
+    private static final int VIP_USER_CRETERIA = 10;
+    private static final int UNDERUSED_USER_CRETERIA = 10;
 
     // regular expression to validate IP address
     private static final String IPADDRESS_PATTERN =
@@ -191,6 +195,7 @@ public class Main {
                             if(footPrint.getExitDate() < xdrHttp.getDate()){
                                 footPrint.setExitDate(xdrHttp.getDate());
                             }
+                            footPrint.setDataConsumption(footPrint.getDataConsumption() + xdrHttp.getContentLength());
                             footPrintHashMap.put(xdrHttp.getServingMcc(), footPrint);
                         } else {
                             // the serving MCC is not there yet, this means that user enters a new roaming destination
@@ -198,6 +203,7 @@ public class Main {
                             footPrint.setExitDate(xdrHttp.getDate());
                             footPrint.setEnterDate(xdrHttp.getDate());
                             footPrint.setServingMcc(xdrHttp.getServingMcc());
+                            footPrint.setDataConsumption(xdrHttp.getContentLength());
                             footPrintHashMap.put(xdrHttp.getServingMcc(), footPrint);
                         }
 
@@ -332,6 +338,19 @@ public class Main {
                                 }
                                 mobileUser.setBrowseDurations(browseDurations);
                             }
+
+                            // based on roaming direction, count the data consumed per consolidated host
+                            if(ROAMING_HOST_CONTENT_LENGTH_MAP.containsKey(roaming)){
+                                hostMap = ROAMING_HOST_CONTENT_LENGTH_MAP.get(roaming);
+                            } else {
+                                hostMap = new HashMap<>();
+                            }
+                            if(hostMap.containsKey(shortHost)){
+                                hostMap.put(shortHost, hostMap.get(shortHost) + xdrHttp.getContentLength());
+                            } else {
+                                hostMap.put(shortHost, xdrHttp.getContentLength());
+                            }
+                            ROAMING_HOST_CONTENT_LENGTH_MAP.put(roaming, hostMap);
                         }
 
                         // process the durations based on the 2/3/4G locations when it happened
@@ -433,26 +452,28 @@ public class Main {
 
         System.out.println(new Date() + " completed processing");
 
-        System.out.println("total time under 2/3G: " + total_2g + "ms");
-        System.out.println("total retrieved content length under 2/3G: " + total_2g_size + "bytes");
-        System.out.println("total time under 4G: " + total_4g + "ms");
-        System.out.println("total retrieved content length under 4G: " + total_4g_size + "bytes");
+        if(DEBUG) {
+            System.out.println("total time under 2/3G: " + total_2g + "ms");
+            System.out.println("total retrieved content length under 2/3G: " + total_2g_size + "bytes");
+            System.out.println("total time under 4G: " + total_4g + "ms");
+            System.out.println("total retrieved content length under 4G: " + total_4g_size + "bytes");
+        }
 
-//        outputIMSI4G();
-//        outputHomeMCCs();
-//        outputServingMCCs();
-//        outputRoamingMap();
-//
-//        outputHostMapByHomeMcc();
-//        outputFQDNMapByHomeMcc();
-//
-//        outputHostMapByRoaming();
-//        outputFQDNMapByRoaming();
-//
-//        outputUsersByRoaming();
+        outputIMSI4G();
+        outputHomeMCCs();
+        outputServingMCCs();
+        outputRoamingMap();
 
-//        outputFilteredHostMapByHomeMcc();
-//        outputFilteredHostMapByRoaming();
+        outputHostMapByHomeMcc();
+        outputFQDNMapByHomeMcc();
+
+        outputHostMapByRoaming();
+        outputFQDNMapByRoaming();
+
+        outputUsersByRoaming();
+
+        outputFilteredHostMapByHomeMcc();
+        outputFilteredHostMapByRoaming();
 
         if(DEBUG) {
             for (Long imei : IMSI_MSISDN_MAPPINGS.keySet()) {
@@ -473,37 +494,38 @@ public class Main {
         }
 
         // write the various results to files
-//        writeToFileInValueOrder("consolidate.csv", CONSOLIDATED_HOST_COUNT, true);
-//        writeToFileInValueOrder("filtered-consolidated-hosts.csv", FILTERED_CONSOLIDATED_HOST_COUNT, true);
-//        writeToFileInValueOrder("fqdn.csv", FQDN_COUNTS, true);
-//        writeToFileInValueOrder("imsi.csv", IMSI_COUNTS, true);
-//        writeToFileInValueOrder("imsi-durations.csv", IMSI_DURATIONS, true);
-//        writeToFileInValueOrder("imsi-msisdn-mapping.csv", IMSI_MSISDN_MAPPINGS, true);
-//        writeToFileInValueOrder("imsi-imei-mapping.csv", IMSI_IMEI_MAPPINGS, true);
-//        writeToFileInValueOrder("users-by-home-mcc.csv", HOME_MCC_COUNT_MAP, true);
-//        writeToFileInValueOrder("roaming-duration.csv", ROAMING_DURATION_MAP, true);
-//        writeToFileInValueOrder("roaming-content-length.csv", ROAMING_CONTENT_LENGTH_MAP, true);
+        writeToFileInValueOrder("consolidate.csv", CONSOLIDATED_HOST_COUNT, true);
+        writeToFileInValueOrder("filtered-consolidated-hosts.csv", FILTERED_CONSOLIDATED_HOST_COUNT, true);
+        writeToFileInValueOrder("fqdn.csv", FQDN_COUNTS, true);
+        writeToFileInValueOrder("imsi.csv", IMSI_COUNTS, true);
+        writeToFileInValueOrder("imsi-durations.csv", IMSI_DURATIONS, true);
+        writeToFileInValueOrder("imsi-msisdn-mapping.csv", IMSI_MSISDN_MAPPINGS, true);
+        writeToFileInValueOrder("imsi-imei-mapping.csv", IMSI_IMEI_MAPPINGS, true);
+        writeToFileInValueOrder("users-by-home-mcc.csv", HOME_MCC_COUNT_MAP, true);
+        writeToFileInValueOrder("roaming-duration.csv", ROAMING_DURATION_MAP, true);
+        writeToFileInValueOrder("roaming-content-length.csv", ROAMING_CONTENT_LENGTH_MAP, true);
         writeToFileInValueOrder("roaming-2g-duration.csv", ROAMING_2G_DURATION_MAP, true);
         writeToFileInValueOrder("roaming-2g-content-length.csv", ROAMING_2G_CONTENT_LENGTH_MAP, true);
         writeToFileInValueOrder("roaming-4g-duration.csv", ROAMING_4G_DURATION_MAP, true);
         writeToFileInValueOrder("roaming-4g-content-length.csv", ROAMING_4G_CONTENT_LENGTH_MAP, true);
-        outputRoamingDetails();
 
         for(Long imei : FREQUENT_USER_ACTIVITIES.keySet()){
             writeToFileInValueOrder(imei + ".csv", FREQUENT_USER_ACTIVITIES.get(imei), true);
         }
-//        writeToFileInValueOrder("imsi-4g-locations.csv", IMSI_4G_LOCATIONS, true);
-//        writeToFileInValueOrder("imsi-23g-locations.csv", IMSI_23G_LOCATIONS, true);
+        writeToFileInValueOrder("imsi-4g-locations.csv", IMSI_4G_LOCATIONS, true);
+        writeToFileInValueOrder("imsi-23g-locations.csv", IMSI_23G_LOCATIONS, true);
 
         System.out.println(new Date() + " starting write results for each mobile user");
 
-//        outputMobileUsers();
-//        writeToFileInValueOrder("label-imsi-counts.csv", DOMAIN_LABEL_COUNTS, true);
-
+        outputRoamingHostContentLengthMap();
+        outputMobileUsers();
+        outputRoamingVIPUserMap();
+        outputRoamingUnderUsedUserMap();
+        outputRoamingDetails();
+        writeToFileInValueOrder("label-imsi-counts.csv", DOMAIN_LABEL_COUNTS, true);
+        outputLabelledIMSIMap();
+        outputHandsets();
         System.out.println(new Date() + " completed writing mobile user data");
-
-//        outputLabelledIMSIMap();
-//        outputHandsets();
     }
 
     private static void outputIMSI4G() {
@@ -586,14 +608,18 @@ public class Main {
             FileWriter fw = new FileWriter(file.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write("HomeMCC,Home Country/Region,Roaming MCC,Roaming Country/Region,User Count,Hosts Visited,Browse Duration (ms),");
-            bw.write("Content Length (byte),Average Data Consumption (byte),Duration under 2/3G (ms),Content Length under 2/3G (byte),Duration under 4G (ms),Content Length under 4G (byte)" + LINE_BREAK);
+            bw.write("Content Length (byte),Average Data Consumption (byte),Duration under 2/3G (ms),Content Length under 2/3G (byte),Duration under 4G (ms),Content Length under 4G (byte)");
+            bw.write("VIP user count,Under-used user count" + LINE_BREAK);
             for (Roaming roaming : ROAMING_SET) {
                 bw.write(roaming.getHomeMcc() + COMMA + MCC_MAP.get(roaming.getHomeMcc()) + COMMA+ roaming.getServingMcc() + COMMA + MCC_MAP.get(roaming.getServingMcc()) + COMMA);
                 int userCount = ROAMING_USER_MAP.get(roaming).size();
-                long contentLength = ROAMING_CONTENT_LENGTH_MAP.get(roaming);
+                long contentLength = ROAMING_CONTENT_LENGTH_MAP.containsKey(roaming) ? ROAMING_CONTENT_LENGTH_MAP.get(roaming) : 0;
                 long average = contentLength/userCount;
                 bw.write(userCount + COMMA + FQDN_MAP_BY_ROAMING.get(roaming).size() + COMMA + ROAMING_DURATION_MAP.get(roaming) + COMMA + contentLength + COMMA + average + COMMA);
-                bw.write(ROAMING_2G_DURATION_MAP.get(roaming) + COMMA + ROAMING_2G_CONTENT_LENGTH_MAP.get(roaming) + COMMA + ROAMING_4G_DURATION_MAP.get(roaming) + COMMA + ROAMING_4G_CONTENT_LENGTH_MAP.get(roaming) + LINE_BREAK);
+                bw.write(ROAMING_2G_DURATION_MAP.get(roaming) + COMMA + ROAMING_2G_CONTENT_LENGTH_MAP.get(roaming) + COMMA + ROAMING_4G_DURATION_MAP.get(roaming) + COMMA + ROAMING_4G_CONTENT_LENGTH_MAP.get(roaming) + COMMA);
+                int vipCount = ROAMING_VIP_USER_MAP.containsKey(roaming) ? ROAMING_VIP_USER_MAP.get(roaming).size() : 0;
+                int underCount = ROAMING_UNDERUSED_USER_MAP.containsKey(roaming) ? ROAMING_UNDERUSED_USER_MAP.get(roaming).size() : 0;
+                bw.write(vipCount + COMMA + underCount + LINE_BREAK);
             }
             bw.close();
         }catch (Exception ex){
@@ -622,7 +648,19 @@ public class Main {
         }
     }
 
+    private static HashMap<Roaming, Long> getRoamingAverageDataConsumption(){
+        HashMap<Roaming, Long> results = new HashMap<>();
+        for(Roaming roaming : ROAMING_SET){
+            int userCount = ROAMING_USER_MAP.get(roaming).size();
+            long contentLength = ROAMING_CONTENT_LENGTH_MAP.containsKey(roaming) ? ROAMING_CONTENT_LENGTH_MAP.get(roaming) : 0;
+            long average = contentLength/userCount;
+            results.put(roaming, average);
+        }
+
+        return  results;
+    }
     private static void outputMobileUsers(){
+        HashMap<Roaming, Long> roamingAverage = getRoamingAverageDataConsumption();
         for(Map.Entry<Long, MobileUser> entry : MOBILE_USERS.entrySet()){
             try{
                 File file = new File(rootPath + "imsis/" + entry.getKey() + ".csv");
@@ -649,10 +687,38 @@ public class Main {
                 }
                 footPrintLongHashMap = sortByValueReversed(footPrintLongHashMap);
                 for(FootPrint footPrint : footPrintLongHashMap.keySet()){
-                    bw.write("Roaming country/region: " + MCC_MAP.get(footPrint.getServingMcc()) + ",");
-                    bw.write("Roaming MCC: " + footPrint.getServingMcc() + ",");
-                    bw.write("Entering: " + new Date(footPrint.getEnterDate()) + ",");
-                    bw.write("Exiting: " + new Date(footPrint.getExitDate()) + LINE_BREAK);
+                    bw.write("Roaming country/region: " + MCC_MAP.get(footPrint.getServingMcc()) + COMMA);
+                    bw.write("Roaming MCC: " + footPrint.getServingMcc() + COMMA);
+                    bw.write("Entering: " + new Date(footPrint.getEnterDate()) + COMMA);
+                    bw.write("Exiting: " + new Date(footPrint.getExitDate()) + COMMA);
+                    bw.write("Data consumption: " + footPrint.getDataConsumption() + " bytes" + LINE_BREAK);
+                    Roaming roaming = new Roaming(mobileUser.getHomeMcc(), footPrint.getServingMcc());
+                    bw.write("Average data consumption in this roaming direction is: " + roamingAverage.get(roaming) + " bytes" + LINE_BREAK);
+
+                    HashMap<Long, Long> valueMap;
+                    if(footPrint.getDataConsumption() > roamingAverage.get(roaming) * VIP_USER_CRETERIA){
+                        // VIP user
+                        if(ROAMING_VIP_USER_MAP.containsKey(roaming)){
+                            valueMap = ROAMING_VIP_USER_MAP.get(roaming);
+                        } else
+                            valueMap = new HashMap<>();
+
+                        valueMap.put(mobileUser.getImsi(), footPrint.getDataConsumption());
+                        ROAMING_VIP_USER_MAP.put(roaming, valueMap);
+
+                        bw.write("VIP User!!!" + LINE_BREAK);
+                    } else if(footPrint.getDataConsumption() < (roamingAverage.get(roaming) / UNDERUSED_USER_CRETERIA)){
+                        // VIP user
+                        if(ROAMING_UNDERUSED_USER_MAP.containsKey(roaming)){
+                            valueMap = ROAMING_UNDERUSED_USER_MAP.get(roaming);
+                        } else
+                            valueMap = new HashMap<>();
+
+                        valueMap.put(mobileUser.getImsi(), footPrint.getDataConsumption());
+                        ROAMING_UNDERUSED_USER_MAP.put(roaming, valueMap);
+
+                        bw.write("Under-used User!!!" + LINE_BREAK);
+                    }
                 }
                 bw.write("Most visited sites (filtered) by counts:\n");
                 HashMap<String, Integer> myMap = sortByValueReversed(mobileUser.getVisitedSites());
@@ -711,6 +777,28 @@ public class Main {
             }
         }
     }
+
+    private static void outputRoamingHostContentLengthMap(){
+        for (Map.Entry<Roaming, HashMap<String, Long>> entry : ROAMING_HOST_CONTENT_LENGTH_MAP.entrySet()) {
+            String fileName = entry.getKey().getHomeMcc() + MCC_MAP.get(entry.getKey().getHomeMcc()) + "-To-" + entry.getKey().getServingMcc() + MCC_MAP.get(entry.getKey().getServingMcc()) + "-data-consumption-per-host.csv";
+            writeToFileInValueOrder(fileName, entry.getValue(), true);
+        }
+    }
+
+    private static void outputRoamingVIPUserMap(){
+        for (Map.Entry<Roaming, HashMap<Long, Long>> entry : ROAMING_VIP_USER_MAP.entrySet()) {
+            String fileName = entry.getKey().getHomeMcc() + MCC_MAP.get(entry.getKey().getHomeMcc()) + "-To-" + entry.getKey().getServingMcc() + MCC_MAP.get(entry.getKey().getServingMcc()) + "-VIP-users.csv";
+            writeToFileInValueOrder(fileName, entry.getValue(), true);
+        }
+    }
+
+    private static void outputRoamingUnderUsedUserMap(){
+        for (Map.Entry<Roaming, HashMap<Long, Long>> entry : ROAMING_UNDERUSED_USER_MAP.entrySet()) {
+            String fileName = entry.getKey().getHomeMcc() + MCC_MAP.get(entry.getKey().getHomeMcc()) + "-To-" + entry.getKey().getServingMcc() + MCC_MAP.get(entry.getKey().getServingMcc()) + "-UnderUsed-users.csv";
+            writeToFileInValueOrder(fileName, entry.getValue(), true);
+        }
+    }
+
     private static void outputLabelledIMSIMap(){
         try {
             for(Map.Entry<String, HashSet<Long>> entry : LABEL_IMSI_MAPS.entrySet()) {
@@ -1004,7 +1092,12 @@ public class Main {
         ROAMING_2G_DURATION_MAP = new HashMap<>();
         ROAMING_4G_CONTENT_LENGTH_MAP = new HashMap<>();
         ROAMING_4G_DURATION_MAP = new HashMap<>();
+
+        ROAMING_VIP_USER_MAP = new HashMap<>();
+        ROAMING_UNDERUSED_USER_MAP = new HashMap<>();
+        ROAMING_HOST_CONTENT_LENGTH_MAP = new HashMap<>();
     }
+
     private static void populateDomainLabels(){
         try {
             // the below file has all the file names to be processed

@@ -1,10 +1,22 @@
 import java.io.Serializable;
 
 public class FootPrint implements Serializable{
-    long imsi, enterDate, exitDate;
+    long imsi;
+    long enterDate;
+    long exitDate;
+
+    long dataConsumption;
     int servingMcc;
 
     public FootPrint() {
+    }
+
+    public long getDataConsumption() {
+        return dataConsumption;
+    }
+
+    public void setDataConsumption(long dataConsumption) {
+        this.dataConsumption = dataConsumption;
     }
 
     public long getImsi() {
