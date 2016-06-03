@@ -1,0 +1,54 @@
+micromessenger,wechat
+wechat,wechat
+wx.qlogo.cn,wechat
+baiduboxapp,baiduboxapp
+.youku.,youku
+m.taobao.com,taobao
+手机淘宝,taobao
+weixin.qq.com,wechat
+.alipay.,alipay
+map.baidu.com,baidumap
+navi.baidu.com,baidumap
+%e7%99%be%e5%ba%a6%e5%9c%b0%e5%9b%be,baidumap
+weibo,sina weibo
+webo,sina weibo
+configuration.apple.com,apple configuration
+.ifengimg.com,fenghuang news
+qqmusic,qq music
+%e9%9f%b3%e4%b9%90,qq music
+%e9%82%ae%e7%ae%b1,qq mail
+.mail.qq.com,qq mail
+.appstore.,apple app store
+%e5%b0%8f%e7%b1%b3%e6%99%ba%e8%83%bd%e5%ae%b6%e5%ba%ad,xiaomi smart home
+.qpic.cn,wechat
+.baidu.com,baidu
+.apple.com,apple
+.sinaimg.cn,sina weibo
+.taobao.com,taobao
+.qlogo.cn,wechat
+.ucweb.com,UCWEB
+.bdimg.com,baidu
+.360.,360
+.sohu.com,sohu
+.weather.gov.hk,hangkong weather
+.sina.cn,sina weibo
+.c-ctrip.com,ctrip
+.sogou.com,sogou
+.iqiyi.com,iqiyi
+.instagram.com,instagram
+.google.,google
+.appledaily.com.hk,apple daily
+.ifengimg.com,fenghuang news
+.umeng.com,umeng
+.ctrip.com,ctrip
+.alipaylog.com,alipay
+.kugou.com,kugou
+.ifeng.com,fenghuang news
+.ksmobile.com,cmcm
+.nextmedia.com,yimeiti
+jd.com,jingdong
+nuomi.com,baidu nuomi
+google-analytics.com,google analytics
+.qq.com,QQ
+.gtimg.,QQ
+.ijianyi.,ijianyi
