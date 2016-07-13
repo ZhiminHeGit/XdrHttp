@@ -164,9 +164,9 @@ public class Main {
                                 HOME_MCC_COUNT_MAP.put(xdrHttp.getHomeMcc(), 1);
                         }
 
-                        UNIQUE_SERVING_MCCS.add(xdrHttp.getServingMcc());
+                        UNIQUE_SERVING_MCCS.add(xdrHttp.getMcc());
                         UNIQUE_HOME_MCCS.add(xdrHttp.getHomeMcc());
-                        Roaming roaming = new Roaming(xdrHttp.getHomeMcc(), xdrHttp.getServingMcc());
+                        Roaming roaming = new Roaming(xdrHttp.getHomeMcc(), xdrHttp.getMcc());
                         ROAMING_SET.add(roaming);
 
                         // record the IMSIs to the roaming map
@@ -182,9 +182,9 @@ public class Main {
 
                         // footprint
                         HashMap<Integer, FootPrint> footPrintHashMap = mobileUser.getFootPrintHashMap();
-                        if (footPrintHashMap.containsKey(xdrHttp.getServingMcc())) {
+                        if (footPrintHashMap.containsKey(xdrHttp.getMcc())) {
                             // the serving MCC already recorded
-                            FootPrint footPrint = footPrintHashMap.get(xdrHttp.getServingMcc());
+                            FootPrint footPrint = footPrintHashMap.get(xdrHttp.getMcc());
                             if (footPrint.getEnterDate() > xdrHttp.getDate()) {
                                 footPrint.setEnterDate(xdrHttp.getDate());
                             }
@@ -192,15 +192,15 @@ public class Main {
                                 footPrint.setExitDate(xdrHttp.getDate());
                             }
                             footPrint.setDataConsumption(footPrint.getDataConsumption() + xdrHttp.getContentLength());
-                            footPrintHashMap.put(xdrHttp.getServingMcc(), footPrint);
+                            footPrintHashMap.put(xdrHttp.getMcc(), footPrint);
                         } else {
                             // the serving MCC is not there yet, this means that user enters a new roaming destination
                             FootPrint footPrint = new FootPrint();
                             footPrint.setExitDate(xdrHttp.getDate());
                             footPrint.setEnterDate(xdrHttp.getDate());
-                            footPrint.setServingMcc(xdrHttp.getServingMcc());
+                            footPrint.setServingMcc(xdrHttp.getMcc());
                             footPrint.setDataConsumption(xdrHttp.getContentLength());
-                            footPrintHashMap.put(xdrHttp.getServingMcc(), footPrint);
+                            footPrintHashMap.put(xdrHttp.getMcc(), footPrint);
                         }
 
                         mobileUser.setFootPrintHashMap(footPrintHashMap);
@@ -433,7 +433,7 @@ public class Main {
                         }
 
                         mobileUser.setLastTripDate(xdrHttp.getDate());
-                        mobileUser.setLastTripMcc(xdrHttp.getServingMcc());
+                        mobileUser.setLastTripMcc(xdrHttp.getMcc());
                         MOBILE_USERS.put(imsi, mobileUser);
                     }
                     line2 = br2.readLine();

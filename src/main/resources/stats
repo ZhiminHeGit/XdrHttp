@@ -1,0 +1,83 @@
+
+460 china, 466 tw, 452 vietnam, 454 Hongkong,455 Macau,502 Malasiya,525 Singapore
+
+
+
+460 china
+cell towers
+total loaded:27623258
+total included:557299
+
+found 2G 3G:14582
+not found 2G 3G:29554
+found 4G:33947
+not found 4G:80430
+no_base_station :0
+
+466 tw
+total loaded:27623258
+total included:348830
+
+found 2G 3G:3542
+not found 2G 3G:28541
+found 4G:16028
+not found 4G:17564
+no_base_station :0
+
+452 vietnam
+total included:134686
+
+found 2G 3G:0
+not found 2G 3G:120
+found 4G:0
+not found 4G:0
+no_base_station :0
+
+454 Hongkong
+total included:104364
+found 2G 3G:8036
+not found 2G 3G:59034
+found 4G:52513
+not found 4G:23408
+no_base_station :0
+
+455 Macau
+total included:5745
+found 2G 3G:499
+not found 2G 3G:3058
+found 4G:0
+not found 4G:0
+no_base_station :0
+
+502 Malasiya
+total included:282469
+found 2G 3G:1438
+not found 2G 3G:3501
+found 4G:3079
+not found 4G:291
+no_base_station :0
+
+525 Singapore
+total included:77331
+found 2G 3G:25
+not found 2G 3G:3223
+found 4G:6088
+not found 4G:1861
+no_base_station :0
+
+chengdu: very few data
+imsi,lon,lat
+454120607181912,104.06932,30.6162
+454120411577121,104.06674,30.5916
+454120412099158,104.06325,30.55422
+454120412230814,103.954166,30.5775
+454120410933721,104.09438,30.66124
+454120608445825,103.595046,30.898523
+454120330011763,104.08516,30.6546
+454120413205990,104.11672,30.64698
+454120116616057,104.11625,30.6506
+466977501180569,104.05083,30.62389
+466924200779025,104.04616,30.55966
+454120608666800,104.06264,30.54795
+454120410040272,104.16516,30.62869
+454120410040272,104.1614,30.6306

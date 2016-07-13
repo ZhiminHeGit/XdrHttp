@@ -1,0 +1,7 @@
+sort on imsi and then time
+sort -T /home  -n -k 4,4 -k 2,2 0501sorted.csv -o 0501sorted2.csv
+
+sort -T /home -t ',' -n -k 4,4 -k 2,2 02140221sorted.csv -o 02140221sorted2.csv
+
+
+ hadoop  fs  -ls  /data/input/tn_signal/xdr_http/20160221/

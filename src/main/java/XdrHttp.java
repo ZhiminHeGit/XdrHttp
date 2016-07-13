@@ -1,12 +1,13 @@
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class XdrHttp {
     private String type;
     private long date;
     private int duration;
     private long imsi, msisdn, imei;
-    private int homeMcc, homeMnc, tac, servingMcc, servingMnc;
+    private int homeMcc, homeMnc, tac, mcc, mnc;
     private int ratType;
     private String apn;
     private int tai, ecgi, cellLAC, cellCI;
@@ -19,7 +20,11 @@ public class XdrHttp {
     private long contentLength;
     private String userAgent;
     private String sgsnIP, sgwIP;
-
+    private String formattedDateTime;
+    static private final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    {
+        format.setTimeZone(TimeZone.getTimeZone("Asia/Hong_Kong"));
+    }
     private XdrHttp() {
     }
 
@@ -42,6 +47,7 @@ public class XdrHttp {
             if (notEmpty(parts[1])) {
                 // the date format is "start time in UTC with msec, such as 1456088339.964
                 xdrHttp.setDate((long) (Float.parseFloat(parts[1]) * 1000));
+                xdrHttp.formattedDateTime = format.format(new Date(xdrHttp.getDate()));
             }
             if (notEmpty(parts[2])) {
                 xdrHttp.setDuration(Integer.parseInt(parts[2]));
@@ -64,10 +70,10 @@ public class XdrHttp {
                 xdrHttp.setTac(Integer.parseInt(parts[8]));
             }
             if (notEmpty(parts[9])) {
-                xdrHttp.setServingMcc(Integer.parseInt(parts[9]));
+                xdrHttp.setMcc(Integer.parseInt(parts[9]));
             }
             if (notEmpty(parts[10])) {
-                xdrHttp.setServingMnc(Integer.parseInt(parts[10]));
+                xdrHttp.setMnc(Integer.parseInt(parts[10]));
             }
             if (notEmpty(parts[13]))
                 xdrHttp.setTai(Integer.parseInt(parts[13]));
@@ -87,14 +93,7 @@ public class XdrHttp {
                 xdrHttp.setContentLength(Long.parseLong(parts[26]));
 
             if (notEmpty(parts[27])) {
-                String[] strs = parts[27].toLowerCase().split("[/ ]");
-                // this happens when user agent is / or \b
-                if (strs.length == 0) {
-
-                    xdrHttp.setUserAgent("null");
-                } else {
-                    xdrHttp.setUserAgent(strs[0]);
-                }
+                xdrHttp.setUserAgent(parts[27].toLowerCase());
             }
             ;
         } catch (Exception e) {
@@ -185,20 +184,20 @@ public class XdrHttp {
         this.tac = tac;
     }
 
-    public int getServingMcc() {
-        return servingMcc;
+    public int getMcc() {
+        return mcc;
     }
 
-    public void setServingMcc(int servingMcc) {
-        this.servingMcc = servingMcc;
+    public void setMcc(int mcc) {
+        this.mcc = mcc;
     }
 
-    public int getServingMnc() {
-        return servingMnc;
+    public int getMnc() {
+        return mnc;
     }
 
-    public void setServingMnc(int servingMnc) {
-        this.servingMnc = servingMnc;
+    public void setMnc(int mnc) {
+        this.mnc = mnc;
     }
 
     public int getRatType() {
@@ -355,5 +354,9 @@ public class XdrHttp {
 
     public String getFilteredHost() {
         return Main.consolidateFQDN(getHost());
+    }
+
+    public String getFormattedDateTime() {
+        return formattedDateTime;
     }
 }

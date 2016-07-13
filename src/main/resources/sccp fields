@@ -1,0 +1,132 @@
+0:End time:01/07/2015 21:40:01
+1:Begin time:01/07/2015 21:40:01
+2:MS:1
+3:User1:0
+4:Accept(ms):0:00:00:000
+5:Transaction(ms):0:00:00:000
+6:DPC:9663
+7:OPC:9198
+8:Link:rilstp01-s1cmcc01-0
+9:Matching Id:0
+10:Link type:End LSL
+11:SIO:$03
+12:Protocol:MAP V1 layer application
+13:DR Status:Not matched MSU
+14:Units size:229
+15:Nb units:1
+16:Nb missing units:0
+17:User3:0
+18:Way:Outgoing
+19:Successful:No
+20:SLS count:1
+21:User0:0
+22:User error:-
+23:Provider cause:-
+24:TCAP Error:-
+25:SCCP Cause:-
+26:UDT Nb:1
+27:UDTS Nb:0
+28:XUDT Nb:0
+29:XUDTS Nb:0
+30:Released by:Calling party
+31:DR Type:Frame Alone xDR
+32:Cg-SSN:Home location register
+33:Cg-nature:international number
+34:Cd-SSN:Visitor location register
+35:Cd-nature:international number
+36:A-nature:-
+37:A-num plan:-
+38:B-nature:-
+39:B-num plan:-
+40:Cg Sccp Add:8615000000000
+41:Cd Sccp Add:447953713126
+42:MSISDN:-
+43:B MSISDN:-
+44:C MSISDN:-
+45:OTID:$171B114E
+46:DTID:$101401DE
+47:C-nature:-
+48:C-type:-
+49:User2:0
+50:BackCallingAddress:-
+51:OperationCode:Insert subscriber data
+52:SMS TP-MTI:-
+53:Teleserv SM:-
+54:Teleserv Fac:-
+55:Length SM:-
+56:IMSI:-
+57:MSC nb:-
+58:VLR nb:-
+59:HLR nb:-
+60:LMSI:$FF FF FF FF
+61:TMSI:$FF FF FF FF
+62:MCC:-
+63:MNC:-
+64:LAC:$FF FF
+65:Cell ident:$FF FF
+66:Serv cent add:-
+67:IMEI:-
+68:CmlPhs:-
+69:CAMEL cpct hand:-
+70:Nb SK:-
+71:BOIC:Present
+72:Service key 1st:-
+73:Service key 2nd:-
+74:Service key 3rd:-
+75:Service key 4th:-
+76:GSM SCF Add 1st:-
+77:GSM SCF Add 2nd:-
+78:sgsnAddress:-
+79:SGSNNumber:-
+80:ggsnAddress:-
+81:GGSNNumber:-
+82:PDP-Add:-
+83:PDP-Type Nb 1:-
+84:PDP-Type Nb 2:-
+85:PDP-Type Nb 3:-
+86:PDP-Type Nb 4:-
+87:PDP-Type Nb 5:-
+88:PDP-Type Org 1:-
+89:PDP-Type Org 2:-
+90:PDP-Type Org 3:-
+91:PDP-Type Org 4:-
+92:PDP-Type Org 5:-
+93:ReliabilityClass1:-
+94:ReliabilityClass2:-
+95:ReliabilityClass3:-
+96:ReliabilityClass4:-
+97:ReliabilityClass5:-
+98:DelayClass1:-
+99:DelayClass2:-
+100:DelayClass3:-
+101:DelayClass4:-
+102:DelayClass5:-
+103:PrecedenceClass1:-
+104:PrecedenceClass2:-
+105:PrecedenceClass3:-
+106:PrecedenceClass4:-
+107:PrecedenceClass5:-
+108:PeakThroughput1:-
+109:PeakThroughput2:-
+110:PeakThroughput3:-
+111:PeakThroughput4:-
+112:PeakThroughput5:-
+113:MeanThroughput1:-
+114:MeanThroughput2:-
+115:MeanThroughput3:-
+116:MeanThroughput4:-
+117:MeanThroughput5:-
+118:Equip Status:-
+119:APN 1:-
+120:APN 2:-
+121:APN 3:-
+122:APN 4:-
+123:APN 5:-
+124:TransactionId:$00 00 00 00 93 B0 F6 DC
+125:ITC:-
+126:HO-nature:-
+127:HO-num plan:-
+128:TP-OA:-
+129:HO-number:-
+130:USSD-MMI-SC:-
+

@@ -1,0 +1,27 @@
+Attached is the code used to generated app daily and response code
+daily.  it is a single jar file.  I made them run separately to reduce
+the memory requirement.  Each run  takes about 5 minutes.
+
+Please let me know if there is any problems.
+
+generate app daily
+java -cp XdrHttp-1.0-SNAPSHOT.jar AppDaily
+input_file_seperated_using_tab  out_put_file
+example:
+java -cp XdrHttp-1.0-SNAPSHOT.jar AppDaily
+/Users/jianli/Downloads/cmidata/xdr_http/raw/http0501.csv
+/root/all_user_app_daily.csv
+
+generate response code daily
+
+java -cp XdrHttp-1.0-SNAPSHOT.jar ResponseCodeDaily
+input_file_seperated_using_tab  out_put_file
+example:
+java -cp XdrHttp-1.0-SNAPSHOT.jar ResponseCodeDaily
+/Users/jianli/Downloads/cmidata/xdr_http/raw/http0501.csv
+/root/all_user_rc_daily.csv
+
+java -cp HorseRace.jar HorseRaceProcess
+csv_directory  out_put_file imsi_number_match_file
+
+java -cp XdrHttp-1.0-SNAPSHOT.jar HorseRaceProcess 22.272861 114.182056 5.0 ./hk_data_small.csv ./cell_towers_select.csv  ./number_imsi.csv ./hk_visitors.csv

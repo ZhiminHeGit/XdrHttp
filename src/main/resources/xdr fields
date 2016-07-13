@@ -1,0 +1,56 @@
+1	type	string	CDR类型. 固定填"HTTP"
+2	time	date time	start time. UTC, with msec.
+3	duration	int	msec
+4	IMSI	digits	15位数字
+5	MSISDN	digits	<=16位数字
+6	IMEI	digits	16位数字
+7	home MCC	digits	extract from IMSI
+8	home MNC	digits	extract from IMSI
+9	TAC	digits	TAC code, extract from IMEI if available
+10	Servering MCC	digits	Visit MCC
+11	Servering MNC	digits	Visit MNC
+12	RAT_Type	int	3GPP:
+0=reserved
+1=UTRAN
+2=GERAN
+3=WLAN
+4=GAN
+5=HSPA Evolution
+6=EUTRAN
+7=Virtual
+13	APN	string
+14	TAI	int	4G位置信息
+15	ECGI	int	4G位置信息
+16	Cell LAC	int	2/3G位置信息
+17	Cell CI	int	2/3G位置信息
+18	user IP	IPv4
+19	server IP	IPv4
+20	user port	int
+21	server port	int
+22	HTTP command	string	如 GET, POST
+23	response code	digits	如200, 404
+24	host	string	如 log.tbs.qq.com
+25	URI	string	100字节截断，问号截断。如 /ajax
+26	content type	string	如 application/x-www-form-urlencoded
+27	content length	int
+28	user agent	string	100字节截断。如 Youku HD;3.6;iPhone OS;7.1.1;iPad2;5
+29	init response delay	int	msec. 1st request to 1st response.
+30	complete response delay	int	msec. 1st request to last response.
+31	complete delay	int	msec. 1st request to "Ack to last response" (in case no Ack, to "last response ever received")
+32	UL packets	int
+33	DL packets	int
+34	UL bytes	int
+35	DL bytes	int
+36	TCP release event	string	如 ok, reset, truncate
+37	TCP RAN latency	int	msec。Sync/Ack到Ack时延
+38	TCP internet latency	int	msec。Sync到Sync/Ack时延
+39	TCP RTT	int	msec。RAN latency + Internet Latency
+40	SGSN IP	IPv4
+41	SGW IP	IPv4
+
+
+
+
+open issues
+151122	No way to split TCP packet with no payload (e.g. ACK, etc) to HTTP object.
+151129	Add 40,41. NE IP for visiting side, for analysis roam-in visiting CMCC province
