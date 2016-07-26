@@ -1,4 +1,6 @@
-public class ResponseCodeStats {
+import java.io.Serializable;
+
+public class ResponseCodeStats implements Serializable {
     int zero = 0;
     int information = 0;
     int success = 0;

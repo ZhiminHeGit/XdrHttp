@@ -1,10 +1,11 @@
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Created by usrc on 5/23/2016.
  */
-public class AppStats {
+public class AppStats implements Serializable {
     long count = 0;
     long contentLength = 0;
     long duration = 0;

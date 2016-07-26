@@ -34,15 +34,15 @@ public class HttpUserDaily implements Serializable{
 
 
     public HttpUserDaily() {
-        visitingMccMncPairs = new HashSet<>();
-        baseStationPairs_3G = new HashSet<>();
-        baseStationPairs_4G = new HashSet<>();
-        imeis = new ArrayList<>();
-        device_type_ids = new ArrayList<>();
+        visitingMccMncPairs = new HashSet();
+        baseStationPairs_3G = new HashSet();
+        baseStationPairs_4G = new HashSet();
+        imeis = new ArrayList();
+        device_type_ids = new ArrayList();
      //   lastNetwork = CarrierNetwork.UNKNOWN;
-        androidSet = new HashSet<>();
-        agentSet = new HashSet<>();
-        footPrints = new ArrayList<>();
+        androidSet = new HashSet();
+        agentSet = new HashSet();
+        footPrints = new ArrayList();
     }
 
     public List<FootPrint> getFootPrints() {
@@ -159,8 +159,8 @@ public class HttpUserDaily implements Serializable{
         sb.append(COMMA);
         sb.append(homeMnc);
         sb.append(COMMA);
-        HashSet<Integer> mccSet = new HashSet<>();
-        List<Integer> mncList = new ArrayList<>();
+        HashSet<Integer> mccSet = new HashSet();
+        List<Integer> mncList = new ArrayList();
         for (Pair<Integer, Integer> pair : visitingMccMncPairs) {
             mccSet.add(pair.getKey());
             mncList.add(pair.getValue());
