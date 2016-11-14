@@ -10,27 +10,17 @@ public class CellTowerGPS {
     static final int LON = 6;
     static final int LAT = 7;
     CellTower cellTower = new CellTower();
-    GPS gps = new GPS();
+    GPS gps;
 
     CellTowerGPS(String input) {
         String[] strs = input.split(",");
         cellTower.setRadio(strs[RADIO]);
-        if (strs[MCC].isEmpty()) {
-            cellTower.setMcc(460);
-        } else {
-            cellTower.setMcc(Integer.parseInt(strs[MCC]));
-        }
-        if (strs[MNC].isEmpty()) {
-            cellTower.setMnc(0);
-        } else {
-            cellTower.setMnc(Integer.parseInt(strs[MNC]));
-        }
+        cellTower.setMcc(Integer.parseInt(strs[MCC]));
+        cellTower.setMnc(Integer.parseInt(strs[MNC]));
 
         cellTower.setArea(Integer.parseInt(strs[AREA]));
         cellTower.setCell(Integer.parseInt(strs[CELL]));
-        gps.setLon(Double.parseDouble(strs[LON]));
-        gps.setLat(Double.parseDouble(strs[LAT]));
-
+        gps = new GPS(Double.parseDouble(strs[LAT]), Double.parseDouble(strs[LON]));
     }
 
     public CellTower getCellTower() {

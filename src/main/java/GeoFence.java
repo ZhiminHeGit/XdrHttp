@@ -3,16 +3,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 // java -cp XdrHttp-1.0-SNAPSHOT.jar ResponseCodeDaily
-public class HorseRaceProcess extends DailyProcess {
+public class GeoFence extends DailyProcess {
 
     ImsiToNumber imsiToNumber;
     OpenCellId openCellId;
     Set<Long> outputSet = new HashSet();
 
-    LocationRuleSet locationRuleSet;
     LocationRule locationRule;
 
-    HorseRaceProcess(String imsiToNumberMapFile) {
+    GeoFence(String imsiToNumberMapFile) {
         imsiToNumber = new ImsiToNumber(imsiToNumberMapFile);
     }
 
@@ -44,16 +43,16 @@ public class HorseRaceProcess extends DailyProcess {
              output = args[6];
         }
 
-        HorseRaceProcess horseRaceProcess = new HorseRaceProcess(mappingFile);
-        horseRaceProcess.headLine = "number,imsi,date,mcc,mnc,rule\n";
-        horseRaceProcess.mcc = HONGKONG;
-        horseRaceProcess.locationRule = new LocationRule(lat, lon, radius);
-        horseRaceProcess.openCellId = new OpenCellId(openCellFile);
+        GeoFence geoFence = new GeoFence(mappingFile);
+        geoFence.headLine = "number,imsi,date,mcc,mnc,rule\n";
+        geoFence.mcc = HONGKONG;
+        geoFence.locationRule = new LocationRule(lat, lon, radius);
+        geoFence.openCellId = new OpenCellId(openCellFile);
 
         System.out.println("Processing MCC: " + HONGKONG);
         // String input = "C:/sccp/20150701_233001_AllSTPxDR_ixp0001-1f.csv";
 
-        horseRaceProcess.process(input, output, args);
+        geoFence.process(input, output, args);
     }
 
     @Override
@@ -65,20 +64,23 @@ public class HorseRaceProcess extends DailyProcess {
         CellTower cellTower = new CellTower(xdrHttp);
         GPS gps = openCellId.lookup(cellTower);
         if (gps != null) {
-         //   for (LocationRule locationRule : locationRuleSet.getLocationRuleSet()) {
                 double distance = GPS.getTravelDistance(locationRule.getGps(), gps);
                 if (distance < locationRule.getRadius()) {
-                    Long number = imsiToNumber.lookup(imsi);
-                    if (number != null) {
-                        writer.write(number + "," +
-                                xdrHttp.getImsi() + "," + xdrHttp.getReadableDate() + "," +
-                                xdrHttp.getMcc() + "," + xdrHttp.getMnc() + "," + locationRule.getName() + "\n", false);
-                        outputSet.add(imsi);
-                        return true;
-                    }
+                    if (lookupNumber(xdrHttp, imsi)) return true;
                 }
-           // }
         }
         return true;
+    }
+
+    private boolean lookupNumber(XdrHttp xdrHttp, long imsi) {
+        Long number = imsiToNumber.lookup(imsi);
+        if (number != null) {
+            writer.write(number + "," +
+                    xdrHttp.getImsi() + "," + xdrHttp.getReadableDate() + "," +
+                    xdrHttp.getMcc() + "," + xdrHttp.getMnc() + "," + locationRule.getName() + "\n", false);
+            outputSet.add(imsi);
+            return true;
+        }
+        return false;
     }
 }

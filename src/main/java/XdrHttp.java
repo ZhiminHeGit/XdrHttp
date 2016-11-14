@@ -50,7 +50,7 @@ public class XdrHttp {
                 xdrHttp.formattedDateTime = format.format(new Date(xdrHttp.getDate()));
             }
             if (notEmpty(parts[2])) {
-                xdrHttp.setDuration(Integer.parseInt(parts[2]));
+//                xdrHttp.setDuration(Integer.parseInt(parts[2]));
             }
 
             if (notEmpty(parts[3]))
@@ -99,6 +99,7 @@ public class XdrHttp {
         } catch (Exception e) {
             System.out.println(line);
             e.printStackTrace();
+            System.exit(0);
             return null;
         }
         return xdrHttp;

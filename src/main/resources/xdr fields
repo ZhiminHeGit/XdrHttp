@@ -1,14 +1,14 @@
 1	type	string	CDR类型. 固定填"HTTP"
-2	time	date time	start time. UTC, with msec.
-3	duration	int	msec
-4	IMSI	digits	15位数字
-5	MSISDN	digits	<=16位数字
-6	IMEI	digits	16位数字
-7	home MCC	digits	extract from IMSI
-8	home MNC	digits	extract from IMSI
+2	time	date time	start time. UTC, with msec. X
+3	duration	int	msec X
+4	IMSI	digits	15位数字 X
+5	MSISDN	digits	<=16位数字 X
+6	IMEI	digits	16位数字 X
+7	home MCC	digits	extract from IMSI X
+8	home MNC	digits	extract from IMSI X
 9	TAC	digits	TAC code, extract from IMEI if available
-10	Servering MCC	digits	Visit MCC
-11	Servering MNC	digits	Visit MNC
+10	Servering MCC	digits	Visit MCC X
+11	Servering MNC	digits	Visit MNC X
 12	RAT_Type	int	3GPP:
 0=reserved
 1=UTRAN
@@ -19,21 +19,21 @@
 6=EUTRAN
 7=Virtual
 13	APN	string
-14	TAI	int	4G位置信息
-15	ECGI	int	4G位置信息
-16	Cell LAC	int	2/3G位置信息
-17	Cell CI	int	2/3G位置信息
+14	TAI	int	4G位置信息 X
+15	ECGI	int	4G位置信息 X
+16	Cell LAC	int	2/3G位置信息 X
+17	Cell CI	int	2/3G位置信息 X
 18	user IP	IPv4
 19	server IP	IPv4
 20	user port	int
 21	server port	int
-22	HTTP command	string	如 GET, POST
-23	response code	digits	如200, 404
-24	host	string	如 log.tbs.qq.com
-25	URI	string	100字节截断，问号截断。如 /ajax
-26	content type	string	如 application/x-www-form-urlencoded
-27	content length	int
-28	user agent	string	100字节截断。如 Youku HD;3.6;iPhone OS;7.1.1;iPad2;5
+22	HTTP command	string	如 GET, POST X
+23	response code	digits	如200, 404 X
+24	host	string	如 log.tbs.qq.com X
+25	URI	string	100字节截断，问号截断。如 /ajax X
+26	content type	string	如 application/x-www-form-urlencoded X
+27	content length	int X
+28	user agent	string	100字节截断。如 Youku HD;3.6;iPhone OS;7.1.1;iPad2;5 X
 29	init response delay	int	msec. 1st request to 1st response.
 30	complete response delay	int	msec. 1st request to last response.
 31	complete delay	int	msec. 1st request to "Ack to last response" (in case no Ack, to "last response ever received")

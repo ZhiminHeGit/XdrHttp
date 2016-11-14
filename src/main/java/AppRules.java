@@ -5,9 +5,6 @@ import java.io.InputStreamReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Created by usrc on 5/23/2016.
- */
 public class AppRules {
     Map<String, String> cmiAppRules;
     Map<String, String> usrcAppRules;
@@ -21,26 +18,18 @@ public class AppRules {
         AppRules appRules = new AppRules();
         System.out.println(appRules.getCMIApp("365rili.com"));
         System.out.println(appRules.getUSRCApp("163.com"));
-
     }
 
     static Map<String, String> getCMIAppRules() {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-        InputStream inputStream = classLoader.getResourceAsStream("cmi_app_rules.txt");
-        // File file = new File("/home/jianli/cmi_app_rules.txt");
+        InputStream inputStream = classLoader.getResourceAsStream("cmi_app.csv");
         Map<String, String> appRules = new LinkedHashMap();
         try {
             BufferedReader appRulesReader = new BufferedReader(new InputStreamReader(inputStream));
             String appListLine = appRulesReader.readLine();
-
             while (appListLine != null) {
-
-                //  System.out.println(appListLine);
                 String[] matches = appListLine.split(",");
-
-                appRules.put(matches[1], matches[0]);
-
+                appRules.put(matches[3], matches[0]);
                 appListLine = appRulesReader.readLine();
             }
         } catch (IOException e) {
@@ -52,7 +41,6 @@ public class AppRules {
     static Map<String, String> getUSRCAppRules() {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         InputStream inputStream = classLoader.getResourceAsStream("usrc_app_rules.txt");
-        //  File file = new File("/home/jianli/usrc_app_rules.txt");
         Map<String, String> appList = new LinkedHashMap();
         try {
             BufferedReader appRulesReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -60,7 +48,6 @@ public class AppRules {
             while (appListLine != null) {
                 //  System.out.println(appListLine);
                 String[] matches = appListLine.split(",");
-
                 appList.put(matches[0], matches[1]);
                 appListLine = appRulesReader.readLine();
             }
@@ -71,13 +58,13 @@ public class AppRules {
     }
 
     public String getCMIApp(String host) {
-        if (host == null) return "-2";
+        if (host == null) return "HostIsNull";
         for (String key : cmiAppRules.keySet()) {
             if (host.contains(key)) {
                 return cmiAppRules.get(key);
             }
         }
-        return "-1";
+        return "NoMatch";
     }
 
     public String getUSRCApp(String line) {
@@ -89,6 +76,4 @@ public class AppRules {
         }
         return "unidentified";
     }
-
-
 }

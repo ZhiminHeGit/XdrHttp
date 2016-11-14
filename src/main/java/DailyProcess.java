@@ -15,19 +15,19 @@ public abstract class DailyProcess {
     int count = 0;
     int skipCount = 0;
     int errCount = 0;
-    String headLine = "no headline";
+    String headLine = "";
     DailyWriter writer;
     BufferedReader reader;
     int mcc = ALL;
     RecordType recordType = RecordType.XDR;
 
     public boolean process(XdrHttp xdrHttp) {
-        System.err.println("not implemented");
+        System.err.println("DailyProcess.process(xdrHttp) not implemented");
         return false;
     }
 
     public boolean process(Sccp sccp) {
-        System.err.println("not implemented");
+        System.err.println("DailyProcess.process(sccp) not implemented");
         return false;
     }
 
@@ -57,31 +57,32 @@ public abstract class DailyProcess {
                     }
                 }
             } else {
-                File inputFile = new File(input);
-                File[] files;
-                if (inputFile.isDirectory()) {
-                    files = inputFile.listFiles();
-                } else {
-                    files = new File[1];
-                    files[0] = inputFile;
-                }
-                for (File file : files) {
-                    if (!file.isFile()) {
-                        continue;
-                    }
-                    System.out.println("processing:" + file);
-                    if (file.getName().endsWith("gz")) {
-                        InputStream fileStream = new FileInputStream(file.getCanonicalPath());
-                        InputStream gzipStream = new GZIPInputStream(fileStream);
-                        Reader decoder = new InputStreamReader(gzipStream);
-                        reader = new BufferedReader(decoder);
+                for (String singleInput : input.split(",")) {
+                    File inputFile = new File(singleInput);
+                    File[] files;
+                    if (inputFile.isDirectory()) {
+                        files = inputFile.listFiles();
                     } else {
-                        reader = new BufferedReader(new FileReader(file));
+                        files = new File[1];
+                        files[0] = inputFile;
                     }
-                    process();
-                    reader.close();
+                    for (File file : files) {
+                        if (!file.isFile()) {
+                            continue;
+                        }
+                        System.out.println("processing:" + file);
+                        if (file.getName().endsWith("gz")) {
+                            InputStream fileStream = new FileInputStream(file.getCanonicalPath());
+                            InputStream gzipStream = new GZIPInputStream(fileStream);
+                            Reader decoder = new InputStreamReader(gzipStream);
+                            reader = new BufferedReader(decoder);
+                        } else {
+                            reader = new BufferedReader(new FileReader(file));
+                        }
+                        process();
+                        reader.close();
+                    }
                 }
-
             }
             writeOut(false);
             reader.close();
@@ -94,26 +95,26 @@ public abstract class DailyProcess {
         System.out.println(new Date() + " finish processing");
     }
 
-    private void process() throws IOException {
+    void process() throws IOException {
+        // skip the first line
         String line = reader.readLine();
         line = reader.readLine();
-        //String separator = ",";
-        // if (line != null && line.contains("\t")) {
-        String separator = "\t";
-        //}
+        String separator = ",";
+        if (line.contains("\t")) {
+            separator = "\t";
+        }
         while (line != null) {
             count++;
             if (count % 100000 == 0) {
-                System.out.println(new Date() + " " + count + " " + skipCount);
+                System.out.println(new Date() + " total: " + count + " skip: " + skipCount + " error:" + errCount);
             }
-            if (count >= 1000000) {
+            /*if (count >= 1000000) {
                 writer.close();
                 System.exit(0);
-            }
+            } */
             if (recordType == RecordType.XDR) {
                 XdrHttp xdrHttp = XdrHttp.parse(line, separator);
                 if (xdrHttp != null) {
-
                     if (mcc == 0 || xdrHttp.getMcc() == mcc) {
                         //writer.write(line + "\n", false);
                         if (!process(xdrHttp)) break;
@@ -121,7 +122,7 @@ public abstract class DailyProcess {
                         skipCount++;
                     }
                 } else {
-                    System.err.println("Wrong record:" + line);
+                    //      System.err.println("Wrong record:" + line);
                     errCount++;
                 }
             } else {
@@ -137,7 +138,7 @@ public abstract class DailyProcess {
     }
 
     public void writeOut(boolean print_to_screan) {
-        System.err.println("not implemented");
+        System.err.println("DailyProcess.writeOut not implemented");
     }
 
     public String getHeadLine() {

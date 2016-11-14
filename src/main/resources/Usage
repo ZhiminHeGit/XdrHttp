@@ -21,10 +21,10 @@ java -cp XdrHttp-1.0-SNAPSHOT.jar ResponseCodeDaily
 /Users/jianli/Downloads/cmidata/xdr_http/raw/http0501.csv
 /root/all_user_rc_daily.csv
 
-java -cp HorseRace.jar HorseRaceProcess
+java -cp HorseRace.jar GeoFence
 csv_directory  out_put_file imsi_number_match_file
 
-java -cp XdrHttp-1.0-SNAPSHOT.jar HorseRaceProcess 22.272861 114.182056 5.0 ./hk_data_small.csv ./cell_towers_select.csv  ./number_imsi.csv ./hk_visitors.csv
+java -cp XdrHttp-1.0-SNAPSHOT.jar GeoFence 22.272861 114.182056 5.0 ./hk_data_small.csv ./cell_towers_select.csv  ./number_imsi.csv ./hk_visitors.csv
 
 spark-submit --class SparkMain --master local XdrHttp-1.0-SNAPSHOT.jar /data/input/tn_signal/xdr_http/20160221/ /data/output/tn_signal/xdr_http/20160221/
 

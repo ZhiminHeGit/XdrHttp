@@ -4,7 +4,7 @@ import java.util.HashMap;
 /**
  * Created by usrc on 5/18/2016.
  */
-public class VipProcess {
+public class VIPProcess {
     public static void main(String[] args) throws IOException {
 
         AppRules appRules = new AppRules();

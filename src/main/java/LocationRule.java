@@ -14,7 +14,7 @@ public class LocationRule {
         return gps;
     }
 
-    GPS gps = new GPS();
+    GPS gps;
 
     public String getName() {
         return name;
@@ -28,8 +28,8 @@ public class LocationRule {
     public LocationRule(String line) {
         String[] strs = line.split(",");
         name = strs[0];
-        gps.setLat(Double.parseDouble(strs[1]));
-        gps.setLon(Double.parseDouble(strs[2]));
+        gps = new GPS(Double.parseDouble(strs[1]),
+        Double.parseDouble(strs[2]));
         radius = Double.parseDouble(strs[3]);
     }
 }

@@ -36,7 +36,7 @@ public class CellTower {
                    not_found_4G ++;
                } */
         } else {
-            System.err.println("No base station found for record: " + xdrHttp);
+     //       System.err.println("No base station found for record: " + xdrHttp);
         }
     }
 

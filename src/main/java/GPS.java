@@ -23,8 +23,20 @@ public class GPS {
     }
 
     public String toString() {
-        return "" + lon + "," + lat;
+        return "" + lat + "," + lon;
     }
+
+    public GPS(double lat, double lon) {
+        this.lat = lat;
+        this.lon = lon;
+    }
+
+    public GPS(String gps) {
+        String[] parts = gps.split(",");
+        lat = Double.parseDouble(parts[0]);
+        lon = Double.parseDouble(parts[1]);
+    }
+
 
     public static double getTravelDistance(GPS gps1, GPS gps2) {
         return distance(gps1.lat, gps1.lon, gps2.lat, gps2.lon, "K");
