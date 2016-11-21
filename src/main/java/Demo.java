@@ -1,4 +1,6 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
 public class Demo {
@@ -6,22 +8,28 @@ public class Demo {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
 
-        int date = 1, hour = 0, quarter = 0;
+
         Set<Long> imsiSet = new HashSet();
         Map<String, Set<Long>> appMap = new HashMap(),
             regionMap = new HashMap(), phoneBrandMap = new HashMap();
 
         double lat = 22.272861, lon = 114.182056;
         double radius = 10;
-        if (args.length >= 3) {
-            lat = Double.parseDouble(args[0]);
-            lon = Double.parseDouble(args[1]);
-            radius = Double.parseDouble(args[2]);
-        };
+        int absolute_hour = 0;
+        String dataDir = "/Volumes/DataDisk/processed/";
 
+        if (args.length >= 3) {
+            dataDir = args[0];
+            lat = Double.parseDouble(args[1]);
+            lon = Double.parseDouble(args[2]);
+            radius = Double.parseDouble(args[3]);
+            absolute_hour = Integer.parseInt(args[4]);
+
+        };
+        int date = absolute_hour / 24 + 1, hour = absolute_hour % 24;
         GPS centerGPS = new GPS(lat, lon);
         String input =
-                String.format("/Volumes/CMI/2016100%d%02d.csv",
+                String.format(dataDir + "2016100%d%02d.csv",
                         date, hour);
 
         try {
@@ -63,16 +71,15 @@ public class Demo {
 
             String s = "人数:" + imsiSet.size();
             System.out.println(s);
-            System.out.println();
 
-            System.out.println("==来源省/地区分布==");
+            System.out.println("=");
             getTop(regionMap);
 
-            System.out.println("==手机型号==");
+            System.out.println("=");
 
             getTop(phoneBrandMap);
 
-            System.out.println("==APP分布==");
+            System.out.println("=");
             getTop(appMap);
         } catch (IOException e) {
             e.printStackTrace();
@@ -88,12 +95,22 @@ public class Demo {
         for (Map.Entry e: sortedItem) {
             total += ((Set) e.getValue()).size();
         }
+        /*   {
+        "Item": "United States",
+        "Count": 9252
+        }, */
+        System.out.println("[");
         for (int i = 0; i < 5 && i < sortedItem.size(); i++) {
-            s = String.format("%s : %.2f%%", sortedItem.get(i).getKey(),
-                    ((double) sortedItem.get(i).getValue().size())/ total * 100);
+            int count =  sortedItem.get(i).getValue().size();
+            s = String.format("{\"Item\": \"%s\","  +
+                            "\"Count\":%d},", sortedItem.get(i).getKey(), count);
+            total = total - count;
             System.out.println(s);
         }
-        System.out.println();
+        s = String.format("{\"Item\": \"%s\","  +
+                    "\"Count\":%d}", "Other", total);
+        System.out.println(s);
+        System.out.println("]");
     }
 
     public static  List<Map.Entry<String, Set<Long>>>

@@ -1,6 +1,6 @@
-import org.apache.hadoop.conf.Configuration;
+/*import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.Path; */
 
 import java.io.*;
 
@@ -10,11 +10,11 @@ import java.io.*;
 public class DailyWriter {
     BufferedWriter bufferedWriter;
     boolean isHdfs =false;
-    FileSystem hdfs;
+    // FileSystem hdfs;
 
     public DailyWriter(String filename) {
         try {
-            if(filename.toLowerCase().contains("hdfs://")) {
+         /*   if(filename.toLowerCase().contains("hdfs://")) {
                 isHdfs = true;
                 Configuration configuration = new Configuration();
                 hdfs = FileSystem.get(configuration);
@@ -24,10 +24,10 @@ public class DailyWriter {
                 }
                 OutputStream os = hdfs.create(file);
                 bufferedWriter = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            } else {
+            } else { */
                 bufferedWriter = new BufferedWriter(new OutputStreamWriter(
                         new FileOutputStream(filename)));
-            }
+          //  }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -48,7 +48,7 @@ public class DailyWriter {
         try {
             bufferedWriter.close();
             if (isHdfs) {
-                hdfs.close();
+        //        hdfs.close();
             }
 
         } catch (IOException e) {

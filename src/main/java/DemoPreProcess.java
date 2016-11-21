@@ -35,8 +35,10 @@ public class DemoPreProcess extends DailyProcess {
         }
 
         DemoPreProcess demoPreProcess = new DemoPreProcess(supportDir);
+
         for (int date = 1; date <= 7; date++) {
-            for (int hour = 0; hour <= 11; hour++) {
+            for (int hour = 0; hour <= 23; hour++) {
+
                 String input = "";
                 String output =
                         String.format(processedDir + "/2016100%d%02d.csv",
@@ -47,7 +49,7 @@ public class DemoPreProcess extends DailyProcess {
                                     date, hour, quarter) + ",";
                 }
                 demoPreProcess.heatMaps.clear();
-                demoPreProcess.process(input, output, args);
+                demoPreProcess.process(input, output, new String[0]);
                 for (Map.Entry entry : demoPreProcess.heatMaps.entrySet()) {
                     String heatmapfile = String.format(processedDir + "/2016100%d%02d.%d.heatmap", date, hour, entry.getKey());
                     System.out.println("Heatmap: " + heatmapfile);
@@ -58,7 +60,7 @@ public class DemoPreProcess extends DailyProcess {
                     }
                     printWriter.close();
                 }
-                return;
+
             }
         }
        // converage.close();

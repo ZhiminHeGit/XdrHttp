@@ -1,15 +1,9 @@
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import java.io.*;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
 
 public abstract class DailyProcess {
-    final static int CHINA = 460;
-    final static int TAIWAN = 466;
     final static int HONGKONG = 454;
     final static int ALL = 0;
     int count = 0;
@@ -42,7 +36,7 @@ public abstract class DailyProcess {
             System.out.println("output:" + output);
             writer = new DailyWriter(output);
             writer.write(getHeadLine(), false);
-            if (input.toLowerCase().contains("hdfs://")) {
+       /*     if (input.toLowerCase().contains("hdfs://")) {
                 FileSystem fs = FileSystem.get(new Configuration());
                 FileStatus[] status = fs.listStatus(new Path(input));
                 for (int i = 0; i < status.length; i++) {
@@ -56,7 +50,7 @@ public abstract class DailyProcess {
                         process();
                     }
                 }
-            } else {
+            } else { */
                 for (String singleInput : input.split(",")) {
                     File inputFile = new File(singleInput);
                     File[] files;
@@ -83,7 +77,7 @@ public abstract class DailyProcess {
                         reader.close();
                     }
                 }
-            }
+         //   }
             writeOut(false);
             reader.close();
             writer.close();
