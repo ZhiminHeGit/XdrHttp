@@ -69,7 +69,7 @@ public class Demo {
                 }
             }
 
-            String s = "人数:" + imsiSet.size();
+            String s = "用户数Subscriber Number:" + imsiSet.size();
             System.out.println(s);
 
             System.out.println("=");
