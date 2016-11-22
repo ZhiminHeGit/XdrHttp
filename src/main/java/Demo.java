@@ -95,20 +95,20 @@ public class Demo {
         for (Map.Entry e: sortedItem) {
             total += ((Set) e.getValue()).size();
         }
-        /*   {
-        "Item": "United States",
-        "Count": 9252
-        }, */
-        System.out.println("[");
+        /* [ ['Task', 'Hours per Day'],
+            ['Work',     11],
+            ['Eat',      2],
+            ['Commute',  2],
+            ['Watch TV', 2],
+            ['Sleep',    7]] */
+        System.out.println("[\n[\"Item\", \"Count\"],");
         for (int i = 0; i < 5 && i < sortedItem.size(); i++) {
             int count =  sortedItem.get(i).getValue().size();
-            s = String.format("{\"Item\": \"%s\","  +
-                            "\"Count\":%d},", sortedItem.get(i).getKey(), count);
+            s = String.format("[\"%s\", %d],", sortedItem.get(i).getKey(), count);
             total = total - count;
             System.out.println(s);
         }
-        s = String.format("{\"Item\": \"%s\","  +
-                    "\"Count\":%d}", "Other", total);
+        s = String.format("[\"其它\", %d]", total);
         System.out.println(s);
         System.out.println("]");
     }

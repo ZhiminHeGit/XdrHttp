@@ -25,7 +25,7 @@
         <module name="XdrHttp" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="1.7">
+    <bytecodeTargetLevel>
       <module name="XdrHttp" target="1.7" />
     </bytecodeTargetLevel>
   </component>
