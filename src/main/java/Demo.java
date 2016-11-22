@@ -24,7 +24,7 @@ public class Demo {
             lon = Double.parseDouble(args[2]);
             radius = Double.parseDouble(args[3]);
             absolute_hour = Integer.parseInt(args[4]);
-        };
+        }
 
         int date = absolute_hour / 24 + 1, hour = absolute_hour % 24;
         GPS centerGPS = new GPS(lat, lon);
@@ -82,7 +82,6 @@ public class Demo {
             System.out.println("=");
             getTop(appMap);
 
-            System.out.println(new File("/Volume/DataDisk").exists());
         } catch (IOException e) {
             e.printStackTrace();
         }
