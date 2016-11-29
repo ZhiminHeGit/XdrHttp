@@ -51,7 +51,10 @@ public class Demo {
                         regionMap.put(region, Utils.newHashSet(imsi));
                     }
                     String app = demoRecord.getApp();
-                    if (!app.contains("HostIsNull") && !app.contains("NoMatch")) {
+                    if (app.contains("手机QQ") || app.contains("腾讯图片") || app.contains("QQ情侣") || app.contains("腾讯灯塔")) {
+                        app = "QQ";
+                    }
+                    if (!app.contains("苹果推送") && !app.contains("HostIsNull") && !app.contains("NoMatch")) {
                         if (appMap.containsKey(app)) {
                             appMap.get(app).add(imsi);
                         } else {
@@ -59,6 +62,9 @@ public class Demo {
                         }
                     }
                     String phoneBrand = demoRecord.getPhoneBrand();
+                    if (phoneBrand == "荣耀") {
+                        phoneBrand = "华为";
+                    }
                     if (!phoneBrand.contains("NoBrand")) {
                         if (phoneBrandMap.containsKey(phoneBrand)) {
                             phoneBrandMap.get(phoneBrand).add(imsi);
