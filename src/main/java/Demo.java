@@ -1,3 +1,5 @@
+﻿import scala.Int;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -10,14 +12,15 @@ public class Demo {
         long start = System.currentTimeMillis();
 
         Set<Long> imsiSet = new HashSet();
-        Map<String, Set<Long>> appMap = new HashMap(),
-            regionMap = new HashMap(), phoneBrandMap = new HashMap();
-
+        Map<String, Set<Long>>
+        regionMap = new HashMap(), phoneBrandMap = new HashMap();
+    Map<String, Integer> appMap = new HashMap();
+      
         double lat = 22.272861, lon = 114.182056;
         double radius = 10;
         int absolute_hour = 0;
-        String dataDir = "/Volumes/DataDisk/processed/";
-
+        //String dataDir = "/Volumes/DataDisk/processed/";
+        String dataDir = "C:\\Software\\processed\\";
         if (args.length >= 3) {
             dataDir = args[0];
             lat = Double.parseDouble(args[1]);
@@ -51,18 +54,19 @@ public class Demo {
                         regionMap.put(region, Utils.newHashSet(imsi));
                     }
                     String app = demoRecord.getApp();
-                    if (app.contains("手机QQ") || app.contains("腾讯图片") || app.contains("QQ情侣") || app.contains("腾讯灯塔")) {
+                    if (app.contains("手机QQ") || app.contains("腾讯图片") ||
+                            app.contains("QQ情侣") || app.contains("腾讯灯塔")) {
                         app = "QQ";
                     }
                     if (!app.contains("苹果推送") && !app.contains("HostIsNull") && !app.contains("NoMatch")) {
                         if (appMap.containsKey(app)) {
-                            appMap.get(app).add(imsi);
+                            appMap.put(app, appMap.get(app) + 1);
                         } else {
-                            appMap.put(app, Utils.newHashSet(imsi));
+                            appMap.put(app, 1);
                         }
                     }
                     String phoneBrand = demoRecord.getPhoneBrand();
-                    if (phoneBrand == "荣耀") {
+                    if (phoneBrand.contains("荣耀")) {
                         phoneBrand = "华为";
                     }
                     if (!phoneBrand.contains("NoBrand")) {
@@ -79,11 +83,11 @@ public class Demo {
             System.out.println(s);
 
             System.out.println("=");
-            getTop(regionMap);
+            getTopBySize(regionMap);
 
             System.out.println("=");
 
-            getTop(phoneBrandMap);
+            getTopBySize(phoneBrandMap);
 
             System.out.println("=");
             getTop(appMap);
@@ -94,8 +98,8 @@ public class Demo {
         System.err.println(System.currentTimeMillis() - start);
     }
 
-    private static void getTop( Map<String, Set<Long>>  itemMap) {
-        List<Map.Entry<String, Set<Long>>> sortedItem  = sortByValue(itemMap);
+    private static void getTopBySize( Map<String, Set<Long>>  itemMap) {
+        List<Map.Entry<String, Set<Long>>> sortedItem  = sortByValueSize(itemMap);
 
         String s;
         int total = 0;
@@ -120,8 +124,50 @@ public class Demo {
         System.out.println("]");
     }
 
+    private static void getTop( Map<String, Integer>  itemMap) {
+        List<Map.Entry<String, Integer>> sortedItem  = sortByValue(itemMap);
+
+        String s;
+        int total = 0;
+        for (Map.Entry e: sortedItem) {
+            total += (Integer) e.getValue();
+        }
+        /* [ ['Task', 'Hours per Day'],
+            ['Work',     11],
+            ['Eat',      2],
+            ['Commute',  2],
+            ['Watch TV', 2],
+            ['Sleep',    7]] */
+        System.out.println("[\n[\"Item\", \"Count\"],");
+        for (int i = 0; i < 5 && i < sortedItem.size(); i++) {
+            int count =  sortedItem.get(i).getValue();
+            s = String.format("[\"%s\", %d],", sortedItem.get(i).getKey(), count);
+            total = total - count;
+            System.out.println(s);
+        }
+        s = String.format("[\"其它\", %d]", total);
+        System.out.println(s);
+        System.out.println("]");
+    }
+
+    public static  List<Map.Entry<String, Integer>>
+    sortByValue( Map<String, Integer> map ) {
+        List<Map.Entry<String, Integer>> list =
+                new LinkedList<>(map.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<String, Integer>>() {
+            public int compare(Map.Entry<String, Integer> o1,
+                               Map.Entry<String, Integer> o2) {
+                return o2.getValue() -
+                        o1.getValue();
+            }
+        });
+
+        return list;
+    }
+
+
     public static  List<Map.Entry<String, Set<Long>>>
-        sortByValue( Map<String, Set<Long>> map ) {
+        sortByValueSize( Map<String, Set<Long>> map ) {
             List<Map.Entry<String, Set<Long>>> list =
                     new LinkedList<>(map.entrySet());
             Collections.sort(list, new Comparator<Map.Entry<String, Set<Long>>>() {
