@@ -143,10 +143,13 @@ public class Demo {
             int count =  sortedItem.get(i).getValue();
             s = String.format("[\"%s\", %d],", sortedItem.get(i).getKey(), count);
             total = total - count;
+            if (i == 4) { // remove the last ,
+                s = s.substring(0, s.length()-1);
+            }
             System.out.println(s);
         }
-        s = String.format("[\"其它\", %d]", total);
-        System.out.println(s);
+     //   s = String.format("[\"其它\", %d]", total);
+    //    System.out.println(s);
         System.out.println("]");
     }
 
