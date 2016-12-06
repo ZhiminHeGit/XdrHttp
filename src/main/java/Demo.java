@@ -1,4 +1,4 @@
-﻿import scala.Int;
+import scala.Int;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,9 +13,9 @@ public class Demo {
 
         Set<Long> imsiSet = new HashSet();
         Map<String, Set<Long>>
-        regionMap = new HashMap(), phoneBrandMap = new HashMap();
-    Map<String, Integer> appMap = new HashMap();
-      
+            regionMap = new HashMap(), phoneBrandMap = new HashMap();
+        Map<String, Integer> appMap = new HashMap();
+
         double lat = 22.272861, lon = 114.182056;
         double radius = 10;
         int absolute_hour = 0;
@@ -143,10 +143,15 @@ public class Demo {
             int count =  sortedItem.get(i).getValue();
             s = String.format("[\"%s\", %d],", sortedItem.get(i).getKey(), count);
             total = total - count;
+
+            if (i == 4) { // remove the last ,
+                s = s.substring(0, s.length()-1);
+            }
             System.out.println(s);
         }
-        s = String.format("[\"其它\", %d]", total);
-        System.out.println(s);
+     //   s = String.format("[\"其它\", %d]", total);
+    //    System.out.println(s);
+
         System.out.println("]");
     }
 
