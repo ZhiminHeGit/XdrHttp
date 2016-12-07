@@ -56,8 +56,7 @@ public class Demo {
                         regionMap.put(region, Utils.newHashSet(imsi));
                     }
                     String app = demoRecord.getApp();
-                    if (app.contains("手机QQ") || app.contains("腾讯图片") ||
-                            app.contains("QQ情侣") || app.contains("腾讯灯塔")) {
+                    if (app.contains("QQ") || app.contains("腾讯")) {
                         app = "QQ";
                     }
                     if (!app.contains("苹果推送") && !app.contains("HostIsNull") && !app.contains("NoMatch")) {
