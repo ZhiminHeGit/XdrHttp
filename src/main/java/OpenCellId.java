@@ -1,15 +1,6 @@
-import com.google.common.collect.Sets;
-import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class OpenCellId {
     Map<String, GPS> openCellIdMap = new HashMap();

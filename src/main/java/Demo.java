@@ -17,16 +17,17 @@ public class Demo {
         Map<String, Integer> appMap = new HashMap();
 
         double lat = 22.272861, lon = 114.182056;
-        double radius = 10;
+        double radius = 100;
         int absolute_hour = 0;
-        //String dataDir = "/Volumes/DataDisk/processed/";
-        String dataDir = "C:\\Software\\processed\\";
+        int mcc = 454;
+        String dataDir = "/Volumes/DataDisk/processed/";
         if (args.length >= 3) {
             dataDir = args[0];
             lat = Double.parseDouble(args[1]);
             lon = Double.parseDouble(args[2]);
             radius = Double.parseDouble(args[3]);
             absolute_hour = Integer.parseInt(args[4]);
+            mcc = Integer.parseInt(args[5]);
         }
 
         int date = absolute_hour / 24 + 1, hour = absolute_hour % 24;
@@ -44,6 +45,7 @@ public class Demo {
                 DemoRecord demoRecord = new DemoRecord(line);
                 Long imsi = demoRecord.getImsi();
                 GPS userGPS = demoRecord.getGps();
+                if (demoRecord.getVisitMCC() != mcc) continue;
                 if (GPS.getTravelDistance(userGPS, centerGPS) <= radius) {
                     imsiSet.add(imsi);
 

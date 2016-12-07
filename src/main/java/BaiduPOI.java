@@ -1,4 +1,3 @@
-import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -26,7 +25,7 @@ public class BaiduPOI {
             InputStream in = con.getInputStream();
             String encoding = con.getContentEncoding();
             encoding = encoding == null ? "UTF-8" : encoding;
-            responseString = IOUtils.toString(in, encoding);
+           // responseString = IOUtils.toString(in, encoding);
             //  System.out.println(response_string);
             JSONObject response = new JSONObject(responseString); // json
             JSONObject result = response.getJSONObject("result");
