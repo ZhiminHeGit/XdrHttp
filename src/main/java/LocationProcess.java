@@ -24,16 +24,16 @@ public class LocationProcess extends DailyProcess {
     int not_found_4G = 0;
 
     public LocationProcess(int mcc) {
-        headLine = "imsi,time, home_mcc, home_mnc, mcc,mnc,area,cell,lon,lat,hop,travel_distance,duration, \n";
-        //openCellId = new OpenCellId(mcc);
+        headLine = "imsi,time, home_mcc, home_mnc, mcc,mnc,area,cell,lon,lat,hop,travel_distance \n";
+        openCellId = new OpenCellId("/Volumes/DataDisk/Data/cell_towers_7.csv");
         this.mcc = mcc;
     }
 
     public static void main(String[] args) {
-        int mcc = 0;
+        int mcc = 454;
         System.out.println("Processing MCC: " + mcc);
-        String input = "C:/xdr_http/0501sorted2.csv";
-        String output = "C:/xdr_http/travel_distance_0501_" + mcc + ".csv";
+        String input = "/Volumes/DataDisk/GoldenWeek/201610010000-HTTP.csv";
+        String output = "/Volumes/DataDisk/Data/location" + mcc + ".csv";
         LocationProcess bs2GPSProcess = new LocationProcess(mcc);
         if (input.contains("STP")) {
             bs2GPSProcess.recordType = RecordType.SCCP;

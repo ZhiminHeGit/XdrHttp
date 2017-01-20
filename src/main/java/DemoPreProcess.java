@@ -1,8 +1,8 @@
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class DemoPreProcess extends DailyProcess {
     int count = 0;
@@ -23,35 +23,52 @@ public class DemoPreProcess extends DailyProcess {
         openCellId = new OpenCellId(supportDir + "/cell_towers_7.csv");
     }
 
-    static public void main(String[] args) throws IOException {
+    static public void main(String[] args) throws IOException, ParseException {
         String supportDir = "/Volumes/DataDisk/Data";
         String dataDir = "/Volumes/DataDisk/GoldenWeek";
         String processedDir = "/Volumes/DataDisk/processed";
+        String startDateString = "20161001";
+        String endDateString = "20161007";
+
+        SimpleDateFormat sdfmt = new SimpleDateFormat("yyyyMMdd");
 
         if (args.length != 0 ) {
             supportDir = args[0];
             dataDir = args[1];
             processedDir = args[2];
+            startDateString = args[3];
+            endDateString = args[4];
         }
+
+        //Date startDate = sdfmt.parse(startDateString);
+        // ate endDate = sdfmt.parse(endDateString);
+        Calendar startDate = Calendar.getInstance();
+        startDate.setTime(sdfmt.parse(startDateString));
+        Calendar endDate = Calendar.getInstance();
+        endDate.setTime(sdfmt.parse(endDateString));
 
         DemoPreProcess demoPreProcess = new DemoPreProcess(supportDir);
 
-        for (int date = 1; date <= 7; date++) {
+        for (Calendar curDate = startDate; ! curDate.after(endDate); curDate.add(Calendar.DATE, 1)) {
+            String curDateString = sdfmt.format(curDate.getTime());
             for (int hour = 0; hour <= 23; hour++) {
 
                 String input = "";
                 String output =
-                        String.format(processedDir + "/2016100%d%02d.csv",
-                                date, hour);
+                        String.format(processedDir + "/%s%02d.csv",
+                                curDateString, hour);
                 for (int quarter = 0; quarter <= 45; quarter += 15) {
                     input +=
-                    String.format(dataDir + "/2016100%d%02d%02d-HTTP.csv",
-                                    date, hour, quarter) + ",";
+                    String.format(dataDir + "/%s%02d%02d-HTTP.csv",
+                            curDateString, hour, quarter) + ",";
                 }
+                System.out.println(input);
+                System.out.println(output);
                 demoPreProcess.heatMaps.clear();
-                demoPreProcess.process(input, output, new String[0]);
+               // demoPreProcess.process(input, output, new String[0]);
                 for (Map.Entry entry : demoPreProcess.heatMaps.entrySet()) {
-                    String heatmapfile = String.format(processedDir + "/2016100%d%02d.%d.heatmap", date, hour, entry.getKey());
+                    String heatmapfile = String.format(processedDir + "/%s.%d.heatmap",
+                            curDateString, hour, entry.getKey());
                     System.out.println("Heatmap: " + heatmapfile);
                     PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(
                             new FileOutputStream(heatmapfile)));

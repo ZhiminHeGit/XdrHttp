@@ -9,7 +9,9 @@ public class ResponseCodeProcess extends DailyProcess {
 
     public static void main(String[] args) {
         ResponseCodeProcess responseCodeProcess = new ResponseCodeProcess();
-        responseCodeProcess.process("C:\\xdr_http\\51sample.csv", "C:\\xdr_http\\all_user_rc_daily.csv", args);
+        responseCodeProcess.process(
+                "/Volumes/DataDisk/GoldenWeek/201610010000-HTTP.csv",
+                "/Volumes/DataDisk/Data/all_user_rc_daily.csv", args);
     }
 
     public ResponseCodeProcess() {

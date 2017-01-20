@@ -10,8 +10,8 @@ public class AppProcess extends DailyProcess {
 
     public static void main(String[] args) {
         AppProcess appProcess = new AppProcess();
-        appProcess.process("C:\\xdr_http\\0501.csv",
-                "C:\\xdr_http\\all_user_app_daily.csv",
+        appProcess.process("/Volumes/DataDisk/GoldenWeek/201610010000-HTTP.csv",
+                "/Volumes/DataDisk/Data/all_user_app_daily.csv",
                 args);
     }
 

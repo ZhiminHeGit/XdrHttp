@@ -1,7 +1,4 @@
-import scala.Int;
-
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -18,23 +15,18 @@ public class Demo {
 
         double lat = 22.272861, lon = 114.182056;
         double radius = 100;
-        int absolute_hour = 0;
         int mcc = 454;
-        String dataDir = "/Volumes/DataDisk/processed/";
+        String input = "/Volumes/DataDisk/processed/2016100100.csv";
         if (args.length >= 3) {
-            dataDir = args[0];
+            input = args[0];
             lat = Double.parseDouble(args[1]);
             lon = Double.parseDouble(args[2]);
             radius = Double.parseDouble(args[3]);
-            absolute_hour = Integer.parseInt(args[4]);
-            mcc = Integer.parseInt(args[5]);
+            mcc = Integer.parseInt(args[4]);
         }
 
-        int date = absolute_hour / 24 + 1, hour = absolute_hour % 24;
         GPS centerGPS = new GPS(lat, lon);
-        String input =
-                String.format(dataDir + "2016100%d%02d.csv",
-                        date, hour);
+
 
         try {
             BufferedReader reader = new BufferedReader(new FileReader(input));
@@ -94,6 +86,7 @@ public class Demo {
             getTop(appMap);
 
         } catch (IOException e) {
+            System.out.println("DataError");
             e.printStackTrace();
         }
         System.err.println(System.currentTimeMillis() - start);
