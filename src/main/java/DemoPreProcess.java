@@ -20,15 +20,15 @@ public class DemoPreProcess extends DailyProcess {
                 new MCCLookup(supportDir +  "/MCC.csv");
         phoneTypeLookup =
                 new PhoneTypeLookup(supportDir + "/cmi_client_dim.csv");
-        openCellId = new OpenCellId(supportDir + "/cell_towers_7.csv");
+        openCellId = new OpenCellId(supportDir + "/cell_towers.csv");
     }
 
     static public void main(String[] args) throws IOException, ParseException {
         String supportDir = "/Volumes/DataDisk/Data";
         String dataDir = "/Volumes/DataDisk/GoldenWeek";
-        String processedDir = "/Volumes/DataDisk/processed";
+        String processedDir = "/Volumes/DataDisk/processedtest";
         String startDateString = "20161001";
-        String endDateString = "20161007";
+        String endDateString = "20161001";
 
         SimpleDateFormat sdfmt = new SimpleDateFormat("yyyyMMdd");
 
@@ -40,8 +40,6 @@ public class DemoPreProcess extends DailyProcess {
             endDateString = args[4];
         }
 
-        //Date startDate = sdfmt.parse(startDateString);
-        // ate endDate = sdfmt.parse(endDateString);
         Calendar startDate = Calendar.getInstance();
         startDate.setTime(sdfmt.parse(startDateString));
         Calendar endDate = Calendar.getInstance();
@@ -65,9 +63,9 @@ public class DemoPreProcess extends DailyProcess {
                 System.out.println(input);
                 System.out.println(output);
                 demoPreProcess.heatMaps.clear();
-               // demoPreProcess.process(input, output, new String[0]);
+                demoPreProcess.process(input, output, new String[0]);
                 for (Map.Entry entry : demoPreProcess.heatMaps.entrySet()) {
-                    String heatmapfile = String.format(processedDir + "/%s.%d.heatmap",
+                    String heatmapfile = String.format(processedDir + "/%s%02d.%d.heatmap",
                             curDateString, hour, entry.getKey());
                     System.out.println("Heatmap: " + heatmapfile);
                     PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(
@@ -97,6 +95,7 @@ public class DemoPreProcess extends DailyProcess {
         validGPS++;
         demoRecord.setApp(appRules.getCMIApp(xdrHttp.getHost()));
         if (xdrHttp.getHomeMcc() == 460) {
+            // 手机号码前7位识别
             long prefix = xdrHttp.getMsisdn() / 10000 - 860000000;
             demoRecord.setRegion(provinceLookup.lookup(prefix));
         } else {

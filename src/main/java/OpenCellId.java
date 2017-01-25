@@ -50,6 +50,6 @@ public class OpenCellId {
     }
 
     public static void main(String[] args) {
-        OpenCellId openCellId = new OpenCellId("/Volumes/DataDisk/Data/cell_towers_7.csv");
+        OpenCellId openCellId = new OpenCellId("/Volumes/DataDisk/Data/cell_towers.csv");
     }
 };
