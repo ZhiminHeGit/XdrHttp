@@ -28,7 +28,9 @@ public class ProvinceLookup {
         }
     }
 
-    String lookup(Long prefix) {
+    String lookupByMsisdn(long msisdn) {
+        // 手机号码前7位识别
+        long prefix = msisdn / 10000 - 860000000;
         return provinceLookupMap.get(prefix);
     }
 }

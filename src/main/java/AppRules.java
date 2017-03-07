@@ -8,6 +8,7 @@ import java.util.Map;
 public class AppRules {
     Map<String, String> cmiAppRules;
     Map<String, String> usrcAppRules;
+    public static String NO_MATCH = "NO_MATCH";
 
     public AppRules() {
         cmiAppRules = getCMIAppRules();
@@ -57,23 +58,27 @@ public class AppRules {
         return appList;
     }
 
-    public String getCMIApp(String host) {
-        if (host == null) return "HostIsNull";
+    public String getCMIApp(String url) {
+        if (url == null) return NO_MATCH;
         for (String key : cmiAppRules.keySet()) {
-            if (host.contains(key)) {
-                return cmiAppRules.get(key);
+            if (url.contains(key)) {
+                String app = cmiAppRules.get(key);
+                if (app.contains("QQ") || app.contains("腾讯")) {
+                    app = "QQ";
+                }
+                return app;
             }
         }
-        return "NoMatch";
+        return NO_MATCH;
     }
 
     public String getUSRCApp(String line) {
-        if (line == null) return "null";
+        if (line == null) return NO_MATCH;
         for (String key : usrcAppRules.keySet()) {
             if (line.contains(key)) {
                 return usrcAppRules.get(key);
             }
         }
-        return "unidentified";
+        return NO_MATCH;
     }
 }

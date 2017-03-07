@@ -36,6 +36,9 @@ public class GPS {
         lat = Double.parseDouble(parts[0]);
         lon = Double.parseDouble(parts[1]);
     }
+    public boolean equals(GPS gps) {
+        return (gps != null && lat == gps.lat && lon == gps.lon);
+    }
 
 
     public static double getTravelDistance(GPS gps1, GPS gps2) {

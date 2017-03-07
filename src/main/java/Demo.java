@@ -37,7 +37,7 @@ public class Demo {
                 DemoRecord demoRecord = new DemoRecord(line);
                 Long imsi = demoRecord.getImsi();
                 GPS userGPS = demoRecord.getGps();
-                if (demoRecord.getVisitMCC() != mcc) continue;
+                if (demoRecord.getServingMcc() != mcc) continue;
                 if (GPS.getTravelDistance(userGPS, centerGPS) <= radius) {
                     imsiSet.add(imsi);
 
@@ -48,20 +48,12 @@ public class Demo {
                         regionMap.put(region, Utils.newHashSet(imsi));
                     }
                     String app = demoRecord.getApp();
-                    if (app.contains("QQ") || app.contains("腾讯")) {
-                        app = "QQ";
-                    }
-                    if (!app.contains("苹果推送") && !app.contains("HostIsNull") && !app.contains("NoMatch")) {
-                        if (appMap.containsKey(app)) {
-                            appMap.put(app, appMap.get(app) + 1);
-                        } else {
-                            appMap.put(app, 1);
-                        }
+
+                    if (!app.contains("苹果推送") && !app.equals(AppRules.NO_MATCH)) {
+                        MapUtil.increment(appMap, app);
                     }
                     String phoneBrand = demoRecord.getPhoneBrand();
-                    if (phoneBrand.contains("荣耀")) {
-                        phoneBrand = "华为";
-                    }
+
                     if (!phoneBrand.contains("NoBrand")) {
                         if (phoneBrandMap.containsKey(phoneBrand)) {
                             phoneBrandMap.get(phoneBrand).add(imsi);

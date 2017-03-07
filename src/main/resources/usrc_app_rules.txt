@@ -1,54 +1,51 @@
-micromessenger,wechat
-wechat,wechat
-wx.qlogo.cn,wechat
-baiduboxapp,baiduboxapp
-.youku.,youku
-m.taobao.com,taobao
-手机淘宝,taobao
-weixin.qq.com,wechat
-.alipay.,alipay
-map.baidu.com,baidumap
-navi.baidu.com,baidumap
-%e7%99%be%e5%ba%a6%e5%9c%b0%e5%9b%be,baidumap
-weibo,sina weibo
-webo,sina weibo
-configuration.apple.com,apple configuration
-.ifengimg.com,fenghuang news
-qqmusic,qq music
-%e9%9f%b3%e4%b9%90,qq music
-%e9%82%ae%e7%ae%b1,qq mail
-.mail.qq.com,qq mail
-.appstore.,apple app store
-%e5%b0%8f%e7%b1%b3%e6%99%ba%e8%83%bd%e5%ae%b6%e5%ba%ad,xiaomi smart home
-.qpic.cn,wechat
-.baidu.com,baidu
-.apple.com,apple
-.sinaimg.cn,sina weibo
-.taobao.com,taobao
-.qlogo.cn,wechat
-.ucweb.com,UCWEB
-.bdimg.com,baidu
-.360.,360
-.sohu.com,sohu
-.weather.gov.hk,hangkong weather
-.sina.cn,sina weibo
-.c-ctrip.com,ctrip
-.sogou.com,sogou
-.iqiyi.com,iqiyi
-.instagram.com,instagram
-.google.,google
-.appledaily.com.hk,apple daily
-.ifengimg.com,fenghuang news
-.umeng.com,umeng
-.ctrip.com,ctrip
-.alipaylog.com,alipay
-.kugou.com,kugou
-.ifeng.com,fenghuang news
-.ksmobile.com,cmcm
-.nextmedia.com,yimeiti
-jd.com,jingdong
-nuomi.com,baidu nuomi
-google-analytics.com,google analytics
-.qq.com,QQ
-.gtimg.,QQ
-.ijianyi.,ijianyi
+wx.qlogo.cn,微信
+weixin.qq.com,微信
+.qq.com,QQ,具体未知
+.qpic.,腾讯相关
+.gtimg.,腾讯相关
+.qlogo.,腾讯相关
+.mzstatic.com,苹果相关
+.apple.com,苹果相关
+.youku.,优酷
+.taobao.com,淘宝
+.alipay.,支付宝
+.alipaylog.com,支付宝
+.alicdn.com,阿里
+.alibaba.com,阿里
+.sinaimg.,新浪
+map.baidu.com,百度地图
+navi.baidu.com,百度地图
+map.bdimg.com,百度地图
+.baidu.com,百度
+.bdimg.com,百度
+.baidustatic.com,百度
+.baidu-img.,百度
+.google.com,谷歌
+.googlesyndication.com,谷歌
+.google-analytics.com,谷歌
+.amap.com,高德地图
+.symcd.com,Symantec
+.symcb.com,Symantec
+.umeng.com,友盟
+.umengcloud.com,友盟
+.umtrack.com,友盟
+.nuomi.com,糯米网
+.ctrip.com,携程
+.c-ctrip.com,携程
+3gppnetwork.org,3gpp
+.meituan.net,美团
+.meituan.com,美团
+.meitu.com,美图
+.meitustat.com,美图
+.monternet.com,移动梦网
+.accuweather.com,accu 天气
+.sina.cn,新浪
+.sinajs.cn,新浪
+.weibo.,微博
+.aliyun.com,阿里云
+.getui.com,个推
+.ksmobile.com,猎豹移动
+.mob.com,MOB
+.cnzz.com,友盟
+.dianping.com,大众点评
+.sogou.com,搜狗

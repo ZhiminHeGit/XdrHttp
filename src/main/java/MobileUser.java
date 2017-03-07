@@ -8,8 +8,8 @@ public class MobileUser implements Serializable {
     long lastTripDate;
     int lastTripMcc;
 
-    HashMap<String, Integer> visitedSites, browseDurations, labelMap;
-
+    HashMap<String, Integer> visitedSites,  labelMap;
+    HashMap<String, Long> browseDurations;
     HashMap<Integer, FootPrint> footPrintHashMap;
 
     public MobileUser() {
@@ -40,11 +40,11 @@ public class MobileUser implements Serializable {
         this.visitedSites = visitedSites;
     }
 
-    public HashMap<String, Integer> getBrowseDurations() {
+    public HashMap<String, Long> getBrowseDurations() {
         return browseDurations;
     }
 
-    public void setBrowseDurations(HashMap<String, Integer> browseDurations) {
+    public void setBrowseDurations(HashMap<String, Long> browseDurations) {
         this.browseDurations = browseDurations;
     }
 

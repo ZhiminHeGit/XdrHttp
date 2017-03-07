@@ -4,65 +4,86 @@ import java.util.*;
  * Created by usrc on 5/25/2016.
  */
 public class LocationProcess extends DailyProcess {
-    OpenCellId openCellId;
 
     Map<Long, Location> lastLocationMap = new HashMap();
-
+    Airports airports = new Airports();
+    int count = 0;
+    Map<String, Integer> routeMap = new HashMap();
     public class Location {
         GPS gps;
         int hop;
-
+        long time;
         public String toString() {
             return gps.toString() + "," + hop;
         }
     }
 
-    int no_base_station = 0;
-    int found_2G3G = 0;
-    int found_4G = 0;
-    int not_found_2G3G = 0;
-    int not_found_4G = 0;
-
-    public LocationProcess(int mcc) {
+    public LocationProcess(String supportDir) {
         headLine = "imsi,time, home_mcc, home_mnc, mcc,mnc,area,cell,lon,lat,hop,travel_distance \n";
-        openCellId = new OpenCellId("/Volumes/DataDisk/Data/cell_towers_7.csv");
-        this.mcc = mcc;
     }
 
     public static void main(String[] args) {
-        int mcc = 454;
-        System.out.println("Processing MCC: " + mcc);
-        String input = "/Volumes/DataDisk/GoldenWeek/201610010000-HTTP.csv";
-        String output = "/Volumes/DataDisk/Data/location" + mcc + ".csv";
-        LocationProcess bs2GPSProcess = new LocationProcess(mcc);
+        String input = "/Volumes/DataDisk/CMIRaw/201610010000-HTTP.csv";
+        String output = "/Volumes/DataDisk/Data/location.csv";
+        LocationProcess locationProcess = new LocationProcess("/Volumes/DataDisk/Data/");
         if (input.contains("STP")) {
-            bs2GPSProcess.recordType = RecordType.SCCP;
+            locationProcess.recordType = RecordType.SCCP;
         }
-        bs2GPSProcess.process(input, output, args);
+        locationProcess.process(input, output, args);
     }
 
     @Override
     public boolean process(XdrHttp xdrHttp) {
         long imsi = xdrHttp.getImsi();
-
-        CellTower cellTower = new CellTower(xdrHttp);
-        GPS gps = openCellId.lookup(cellTower);
+        final int MIN_FLY_DISTANCE = 200;
+        final int MIN_FLY_SPEED = 100;
+        GPS gps = xdrHttp.getGps();
         if (gps != null) {
             Location last_location = lastLocationMap.get(imsi);
             double travel_distance = 0;
             if (last_location == null) {
                 last_location = new Location();
                 lastLocationMap.put(imsi, last_location);
+
             } else if (last_location.gps != gps) {
                 travel_distance = GPS.getTravelDistance(gps, last_location.gps);
+                if (travel_distance > MIN_FLY_DISTANCE) {
+                    long time_diff = xdrHttp.getDate() - last_location.time;
+                    double hour = time_diff / 1000.0 / 3600.0;
+                    double speed = travel_distance / hour; // km per hour
+
+                    if (speed > MIN_FLY_SPEED) {
+                        Airport from = airports.lookup(last_location.gps);
+                        Airport to = airports.lookup(gps);
+                        if (from != null && to != null) {
+                            String route = from.getCityAndCountry() + "," + from.getGPS().toString() + ","
+                                    + to.getCityAndCountry() + "," + to.getGPS().toString();
+                            if (!routeMap.containsKey(route)) {
+                                routeMap.put(route, 0);
+                            }
+                            routeMap.put(route, routeMap.get(route) + 1);
+
+                            System.out.println(String.format(
+                                    "%d:%d From: %s To: %s Distance: %.2fkm Duration: %.2fh Speed: %.2fkmph",
+                                    ++count,
+                                    xdrHttp.getImsi(),
+                                    from.getCityAndCountry(),
+                                    to.getCityAndCountry() ,
+                                    travel_distance ,
+                                    hour ,
+                                    speed));
+                        }
+                    }
+                }
             } else { // location.gps == gps. same as last location
                 return true;
             }
             last_location.hop++;
             last_location.gps = gps;
-            writer.write(imsi + "," + xdrHttp.getFormattedDateTime() + "," + xdrHttp.getHomeMcc() + "," + xdrHttp.getHomeMnc() + "," +
-                    xdrHttp.getMcc() + "," + xdrHttp.getMnc() + "," +
-                    cellTower.getArea() + "," + cellTower.getCell() + "," + last_location + "," + travel_distance + "\n", false);
+            last_location.time = xdrHttp.getDate();
+//            writer.write(imsi + "," + xdrHttp.getFormattedDateTime() + "," + xdrHttp.getHomeMcc() + "," + xdrHttp.getHomeMnc() + "," +
+//                    xdrHttp.getMcc() + "," + xdrHttp.getMnc() + "," +
+//                    cellTower.getArea() + "," + cellTower.getCell() + "," + last_location + "," + travel_distance + "\n", false);
         }
         return true;
     }

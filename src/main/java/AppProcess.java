@@ -1,9 +1,6 @@
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by usrc on 5/27/2016.
- */
 public class AppProcess extends DailyProcess {
     AppRules appRules = new AppRules();
     HashMap<String, AppStats> appStatsMap = new HashMap();

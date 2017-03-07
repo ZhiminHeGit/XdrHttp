@@ -10,6 +10,26 @@
 
     <!-- http://mvnrepository.com/artifact/org.jsoup/jsoup -->
 <dependencies>
+
+    <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
+    <dependency>
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>1.10.2</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-client</artifactId>
+        <version>1.2.2</version>
+    </dependency>
+
+    <dependency>
+        <groupId>com.google.maps</groupId>
+        <artifactId>google-maps-services</artifactId>
+        <version>0.1.17</version>
+    </dependency>
+
     <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>

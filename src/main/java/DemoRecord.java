@@ -6,7 +6,7 @@ public class DemoRecord {
 
     long imsi;
     GPS gps;
-    int visitMCC;
+    int servingMcc;
     String region;
     String app;
     String phoneBrand;
@@ -19,7 +19,7 @@ public class DemoRecord {
         String[] parts = str.split(",");
         imsi = Long.parseLong(parts[0]);
         gps = new GPS(parts[1] + "," + parts[2]);
-        visitMCC = Integer.parseInt(parts[3]);
+        servingMcc = Integer.parseInt(parts[3]);
         region = parts[4];
         app = parts[5];
         phoneBrand = parts[6];
@@ -41,12 +41,12 @@ public class DemoRecord {
         this.gps = gps;
     }
 
-    public int getVisitMCC() {
-        return visitMCC;
+    public int getServingMcc() {
+        return servingMcc;
     }
 
-    public void setVisitMCC(int visitMCC) {
-        this.visitMCC = visitMCC;
+    public void setServingMcc(int servingMcc) {
+        this.servingMcc = servingMcc;
     }
 
     public String getRegion() {
@@ -74,6 +74,6 @@ public class DemoRecord {
     }
 
     public String toString() {
-        return "" + imsi + "," + gps + "," + visitMCC + "," + region + "," + app + "," + phoneBrand;
+        return "" + imsi + "," + gps + "," + servingMcc + "," + region + "," + app + "," + phoneBrand;
     }
 }

@@ -5,7 +5,7 @@ import java.util.TimeZone;
 public class XdrHttp {
     private String type;
     private long date;
-    private int duration;
+    private long duration;
     private long imsi, msisdn, imei;
     private int homeMcc, homeMnc, tac, mcc, mnc;
     private int ratType;
@@ -21,11 +21,19 @@ public class XdrHttp {
     private String userAgent;
     private String sgsnIP, sgwIP;
     private String formattedDateTime;
+    private GPS gps;
+
+    public String getRaw() {
+        return raw;
+    }
+
+    private String raw;
     static private final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     {
         format.setTimeZone(TimeZone.getTimeZone("Asia/Hong_Kong"));
     }
-    private XdrHttp() {
+    private XdrHttp(String line) {
+        raw = line;
     }
 
     public static boolean notEmpty(String string) {
@@ -37,7 +45,8 @@ public class XdrHttp {
     }
 
     public static XdrHttp parse(String line, String separator) {
-        XdrHttp xdrHttp = new XdrHttp();
+
+        XdrHttp xdrHttp = new XdrHttp(line);
         if (!notEmpty(line)) {
             throw new RuntimeException("line is empty");
         }
@@ -49,26 +58,32 @@ public class XdrHttp {
                 xdrHttp.setDate((long) (Float.parseFloat(parts[1]) * 1000));
                 xdrHttp.formattedDateTime = format.format(new Date(xdrHttp.getDate()));
             }
+
             if (notEmpty(parts[2])) {
-//                xdrHttp.setDuration(Integer.parseInt(parts[2]));
+               xdrHttp.setDuration(Long.parseLong(parts[2]));
             }
 
             if (notEmpty(parts[3]))
                 xdrHttp.setImsi(Long.parseLong(parts[3]));
+
             if (notEmpty(parts[4]))
                 xdrHttp.setMsisdn(Long.parseLong(parts[4]));
+
             if (notEmpty(parts[5]))
                 xdrHttp.setImei(Long.parseLong(parts[5]));
 
             if (notEmpty(parts[6])) {
                 xdrHttp.setHomeMcc(Integer.parseInt(parts[6]));
             }
+
             if (notEmpty(parts[7])) {
                 xdrHttp.setHomeMnc(Integer.parseInt(parts[7]));
             }
+
             if (notEmpty(parts[8])) {
                 xdrHttp.setTac(Integer.parseInt(parts[8]));
             }
+
             if (notEmpty(parts[9])) {
                 xdrHttp.setMcc(Integer.parseInt(parts[9]));
             }
@@ -88,6 +103,10 @@ public class XdrHttp {
 
             if (notEmpty(parts[23]))
                 xdrHttp.setHost(parts[23].toLowerCase());
+            if (notEmpty(parts[24]))
+                xdrHttp.setUriData(parts[24].toLowerCase());
+            if (notEmpty(parts[25]))
+                xdrHttp.setContentType(parts[25].toLowerCase());
 
             if (notEmpty(parts[26]))
                 xdrHttp.setContentLength(Long.parseLong(parts[26]));
@@ -105,7 +124,13 @@ public class XdrHttp {
         return xdrHttp;
     }
 
-
+    public GPS getGps() {
+        if (gps == null) {
+            CellTower cellTower = new CellTower(this);
+            gps = OpenCellId.getInstance().lookup(cellTower);
+        }
+        return gps;
+    }
     public String getType() {
         return type;
     }
@@ -129,11 +154,11 @@ public class XdrHttp {
         this.date = date;
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(long duration) {
         this.duration = duration;
     }
 

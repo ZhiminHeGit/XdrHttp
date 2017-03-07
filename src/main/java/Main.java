@@ -97,7 +97,7 @@ public class Main {
                         // IMSI is the primary key for most of the HashMaps
                         Long imsi = xdrHttp.getImsi();
 
-                        // keep a HashSet of IMSIs for quick lookup in 2/3/4G locations
+                        // keep a HashSet of IMSIs for quick lookupGoogleMap in 2/3/4G locations
                         IMSIS.add(imsi);
 
                         MobileUser mobileUser = MOBILE_USERS.containsKey(imsi) ? MOBILE_USERS.get(imsi) : new MobileUser();
@@ -156,7 +156,7 @@ public class Main {
                         if (mobileUser.getTac() == 0)
                             mobileUser.setTac(xdrHttp.getTac());
 
-                        // count the user by Home Mcc
+                        // flightCount the user by Home Mcc
                         if (!MOBILE_USERS.containsKey(imsi)) {
                             if (HOME_MCC_COUNT_MAP.containsKey(xdrHttp.getHomeMcc()))
                                 HOME_MCC_COUNT_MAP.put(xdrHttp.getHomeMcc(), HOME_MCC_COUNT_MAP.get(xdrHttp.getHomeMcc()) + 1);
@@ -237,7 +237,7 @@ public class Main {
                             }
 
                             HashMap<String, Long> hostMap;
-                            // do the count by roaming and by home MCC
+                            // do the flightCount by roaming and by home MCC
                             if (HOST_MAP_BY_HOME_MCC.containsKey(xdrHttp.getHomeMcc())) {
                                 hostMap = HOST_MAP_BY_HOME_MCC.get(xdrHttp.getHomeMcc());
                             } else {
@@ -326,7 +326,7 @@ public class Main {
                             }
                             mobileUser.setVisitedSites(visitedSites);
                             if (xdrHttp.getDuration() != 0) {
-                                HashMap<String, Integer> browseDurations = mobileUser.getBrowseDurations();
+                                HashMap<String, Long> browseDurations = mobileUser.getBrowseDurations();
                                 if (browseDurations.containsKey(shortHost)) {
                                     browseDurations.put(shortHost, browseDurations.get(shortHost) + xdrHttp.getDuration());
                                 } else {
@@ -335,7 +335,7 @@ public class Main {
                                 mobileUser.setBrowseDurations(browseDurations);
                             }
 
-                            // based on roaming direction, count the data consumed per consolidated host
+                            // based on roaming direction, flightCount the data consumed per consolidated host
                             if (ROAMING_HOST_CONTENT_LENGTH_MAP.containsKey(roaming)) {
                                 hostMap = ROAMING_HOST_CONTENT_LENGTH_MAP.get(roaming);
                             } else {
@@ -605,7 +605,7 @@ public class Main {
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write("HomeMCC,Home Country/Region,Roaming MCC,Roaming Country/Region,User Count,Hosts Visited,Browse Duration (ms),");
             bw.write("Content Length (byte),Average Data Consumption (byte),Duration under 2/3G (ms),Content Length under 2/3G (byte),Duration under 4G (ms),Content Length under 4G (byte)");
-            bw.write("VIP user count,Under-used user count" + LINE_BREAK);
+            bw.write("VIP user flightCount,Under-used user flightCount" + LINE_BREAK);
             for (Roaming roaming : ROAMING_SET) {
                 bw.write(roaming.getHomeMcc() + COMMA + MCC_MAP.get(roaming.getHomeMcc()) + COMMA + roaming.getServingMcc() + COMMA + MCC_MAP.get(roaming.getServingMcc()) + COMMA);
                 int userCount = ROAMING_USER_MAP.get(roaming).size();
@@ -743,7 +743,7 @@ public class Main {
                     }
                 }
                 bw.write("Most visited sites (filtered) by browsing durations:\n");
-                myMap = sortByValueReversed(mobileUser.getBrowseDurations());
+             //   myMap = sortByValueReversed(mobileUser.getBrowseDurations());
                 for (Map.Entry<String, Integer> mapEntry : myMap.entrySet()) {
                     if (!EXCLULDED_DOMAINS.contains(mapEntry.getKey()))
                         bw.write(mapEntry.getKey() + COMMA + mapEntry.getValue() + LINE_BREAK);
@@ -1096,10 +1096,10 @@ public class Main {
         String[] parts = fqdn.split(DOT);
         if (parts.length <= 2)
             return fqdn;
-        else if (parts[parts.length - 2].equals("co") || parts[parts.length - 2].equals("com") || parts[parts.length - 2].equals("net") || parts[parts.length - 2].equals("org") || parts[parts.length - 2].equals("gov"))
+     //   else if (parts[parts.length - 2].equals("co") || parts[parts.length - 2].equals("com") || parts[parts.length - 2].equals("net") || parts[parts.length - 2].equals("org") || parts[parts.length - 2].equals("gov"))
             return parts[parts.length - 3] + "." + parts[parts.length - 2] + "." + parts[parts.length - 1];
-        else
-            return parts[parts.length - 2] + "." + parts[parts.length - 1];
+     //   else
+     //       return parts[parts.length - 2] + "." + parts[parts.length - 1];
     }
 
     private static boolean isIPAddress(final String ip) {

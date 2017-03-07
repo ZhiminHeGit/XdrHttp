@@ -70,32 +70,6 @@ public class TetheringDetection {
             }
         }
         Main.writeToFileInValueOrder("C:/xdr_http/ranked_agents_time.txt", agentCount, true);
-        // PrintWriter out = new PrintWriter("C:/xdr_http/ranked_agents.txt");
-        // for (long imsi: imisPhoneTypeMap.keySet()
-        //      ) {
-            /*HashSet<String> phoneTypes = new HashSet<>();
-            for (String userAgent:imisPhoneTypeMap.get(imsi)) {
-                if (userAgent.contains(IPHONE)) {
-                    phoneTypes.add(IPHONE);
-                }
-                if (userAgent.contains(ANDROID)) {
-                    phoneTypes.add(ANDROID);
-                }
-                if (userAgent.contains(WINDOWS)) {
-                    phoneTypes.add(WINDOWS);
-                }
-                if (phoneTypes.size() > 1) {
-                    out.println("imsi:" + imsi);
-                    for (String s:imisPhoneTypeMap.get(imsi)){
-                        out.println(s);
-                    }
-                    break;
-                }
-            }*/
-        //   out.println("imsi:" + imsi);
-        //   for (String s:imisPhoneTypeMap.get(imsi)){
-        //       out.println("agent:" + s);
-        // }
-        //}
+
     }
 }
