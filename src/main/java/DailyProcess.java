@@ -21,11 +21,18 @@ public abstract class DailyProcess {
     RecordType recordType = RecordType.XDR;
 
     static public void main(String[] args) throws IOException, ParseException {
+        /* Usage:
+        supportDir:contains all the supporting data file, such as cell_towers.csv
+        dataDir: contains .cvs file
+        processedDir: stored processed results
+        startDateString: which date to start, inclusive
+        ednDateString: which date to end, inclusive
+        */
         String supportDir = "/Volumes/DataDisk/Data";
-        String dataDir = "/Volumes/WDPassport/CMIData/";
-        String processedDir = "/Volumes/DataDisk/processedtest";
-        String startDateString = "20161003";
-        String endDateString = "20161003";
+        String dataDir = "/Volumes/DataDisk/CMIRaw/";
+        String processedDir = "/Volumes/DataDisk/ProcessedTest";
+        String startDateString = "20161001";
+        String endDateString = "20161001";
 
         SimpleDateFormat sdfmt = new SimpleDateFormat("yyyyMMdd");
 

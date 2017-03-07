@@ -1,5 +1,6 @@
 import java.util.*;
 
+/* refer to DailyProcess.main for usage */
 public class DemoPreProcess extends DailyProcess {
     int count = 0;
     int validGPS = 0;
@@ -17,8 +18,6 @@ public class DemoPreProcess extends DailyProcess {
         phoneTypeLookup =
                 new PhoneTypeLookup(supportDir + "/cmi_client_dim.csv");
     }
-
-
 
     @Override
     public boolean process(XdrHttp xdrHttp) {
