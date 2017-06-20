@@ -5,8 +5,7 @@ public class LocationRule {
     String name = "";
 
     public LocationRule(double lat, double lon, double radius) {
-        gps.setLat(lat);
-        gps.setLon(lon);
+        gps = new GPS(lat, lon);
         this.radius = radius;
     }
 

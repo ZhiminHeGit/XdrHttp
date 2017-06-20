@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LocationRuleSet {
+public class    LocationRuleSet {
     public Set<LocationRule> getLocationRuleSet() {
         return locationRuleSet;
     }
